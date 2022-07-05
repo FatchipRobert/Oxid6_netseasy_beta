@@ -20,7 +20,7 @@
 ### Download / Installation
 1] Install Nets Plugin:
 
-    Run command: composer require nets-mehabub/ox6_metadata
+    Run command: composer require nets-ecom/oxid6_netseasy_beta
 
     Add below lines of code in composer.json file
 
