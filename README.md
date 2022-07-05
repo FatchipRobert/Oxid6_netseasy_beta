@@ -6,7 +6,7 @@
 |Author       | `Nets eCom`
 |Prefix       | `EASY-OX6`
 |Shop Version | `6+`
-|Version      | `1.2.0`
+|Version      | `2.0.0`
 |Guide        | https://tech.nets.eu/shopmodules
 |Github       | https://github.com/DIBS-Payment-Services/oxid6_easy
 
