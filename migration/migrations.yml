@@ -1,0 +1,4 @@
+name: Nets module migration
+migrations_namespace: Es\NetsEasy\Migrations
+table_name: oxmigrations_nets
+migrations_directory: data

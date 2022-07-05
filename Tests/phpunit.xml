@@ -1,0 +1,29 @@
+<phpunit backupGlobals="true"
+         backupStaticAttributes="false"
+         bootstrap="/"
+         cacheTokens="true"
+         colors="true"
+         convertErrorsToExceptions="true"
+         convertNoticesToExceptions="true"
+         convertWarningsToExceptions="true"
+         forceCoversAnnotation="false"
+         printerClass="PHPUnit\TextUI\ResultPrinter"
+         processIsolation="false"
+         stopOnError="false"
+         stopOnFailure="false"
+         stopOnIncomplete="false"
+         stopOnSkipped="false"
+         beStrictAboutTestsThatDoNotTestAnything="false"
+         verbose="false">
+    <testsuites>
+        <testsuite name="blog">
+            <directory suffix=".php">tests/</directory>
+        </testsuite>
+    </testsuites>
+	
+    <filter>
+        <whitelist>
+            <directory suffix=".php">../extend/</directory>
+        </whitelist>
+    </filter>
+</phpunit>

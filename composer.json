@@ -1,0 +1,21 @@
+{
+  "name": "nets-mehabub/ox6_metadata",
+  "description": "Nets Payment Module for Oxid 6",
+  "type": "oxideshop-module",
+  "keywords": ["oxid", "modules", "eShop"],
+  "homepage": "https://www.mollie.com/",  
+  "license": [
+    "OSL-3.0",
+    "AFL-3.0"
+  ],
+  "extra": {
+    "oxideshop": {
+      "target-directory": "es/esnetseasy"
+    }
+  },
+  "autoload": {
+    "psr-4": {
+      "Es\\NetsEasy\\": "./"      
+    }
+  }
+}

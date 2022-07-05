@@ -1,0 +1,21 @@
+# Codeception Test Suite Configuration
+#
+# Suite for acceptance tests.
+
+# acceptance.suite.yml
+#actor: AcceptanceTester
+#modules:
+#    enabled:
+#        - PhpBrowser:
+#              url: https://oxidlocal.sokoni.it/eshop_6_5/source/
+#        - \Helper\Acceptance
+
+actor: AcceptanceTester
+modules:
+    enabled:
+        - WebDriver:
+            url: https://oxidlocal.sokoni.it/eshop_6_5/source/
+            browser: chrome
+            window_size: maximize
+        - \Helper\Acceptance
+        - Asserts
