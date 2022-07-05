@@ -5,7 +5,7 @@
   "keywords": ["oxid", "modules", "eShop"],
   "homepage": "https://www.nets.eu/",  
   "license": [
-    "GPLv3"
+    "AGPL-3.0-or-later"
   ],
   "extra": {
     "oxideshop": {
