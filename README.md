@@ -1,4 +1,4 @@
-# NETS A/S - Oxid 6 Payment Module
+# NETS A/S - Oxid 6 Payment Module - BETA VERSION
 ==============================================================
 
 |Module       | Nets Easy Payment Module for Oxid 6
