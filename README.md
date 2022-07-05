@@ -38,9 +38,10 @@
     vendor/bin/oe-console oe:module:apply-configuration
 
 3] Initialize Codeception:
+
     vendor/bin/codecept bootstrap
 
-4) To execute codeception on correct test folder: add or update below lines of code in codeception.yml file.
+4] To execute codeception on correct test folder: add or update below lines of code in codeception.yml file.
 
     paths:
         test:source/modules/es/esnetseasy/Tests
@@ -68,8 +69,7 @@
 
     .\vendor\bin\codecept run --coverage --coverage-xml --coverage-html
     
-8] Congratulation code coverage looks like below
-
+8] Congratulation code coverage looks like below.
     ![Alt text](code-coverage-report.JPG?raw=true "Title")
     
     
