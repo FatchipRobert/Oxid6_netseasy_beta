@@ -47,16 +47,12 @@ class CommonHelperTest extends \Codeception\Test\Unit
         $result = $this->oNetsCommonHelper->getSecretKey();
         if($result){
             $this->assertNotNull($result);
-        }else{
-            $this->assertNull($result);
-        }
+        } 
         \oxRegistry::getConfig()->setConfigParam('nets_blMode', 0);
         $result = $this->oNetsCommonHelper->getSecretKey();
         if($result){
             $this->assertNotNull($result);
-        }else{
-            $this->assertNull($result);
-        }
+        } 
     }
 
     /**

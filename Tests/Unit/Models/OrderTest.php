@@ -155,6 +155,7 @@ class OrderTest extends \Codeception\Test\Unit
         $oUser = \oxNew("oxuser", "core");
         $oUser->Load($sUserID);
         $result = $this->orderObject->setLanguage($oUser, $sTranslation = null, $basket);
+				print_r($result);die;
         $this->assertArrayHasKey('language', $result);
         
         if($result){
