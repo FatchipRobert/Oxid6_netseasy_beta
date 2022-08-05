@@ -2,9 +2,12 @@
 
 namespace Es\NetsEasy\Tests\Unit\Controller\Admin;
 
-use \Es\NetsEasy\extend\Application\Controller\Admin\OrderOverviewController;
+use \Es\NetsEasy\ShopExtend\Application\Controller\Admin\OrderOverviewController;
 use Es\NetsEasy\Core\CommonHelper;
-use Es\NetsEasy\extend\Application\Models\OrderOverview;
+use Es\NetsEasy\ShopExtend\Application\Models\OrderOverview;
+use Es\NetsEasy\ShopExtend\Application\Models\PaymentOperations;
+use Es\NetsEasy\ShopExtend\Application\Models\PaymentStatus;
+use Es\NetsEasy\ShopExtend\Application\Models\OrderItems;
 
 class OrderOverviewControllerTest extends \Codeception\Test\Unit
 {
@@ -28,13 +31,15 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
     {
         $oOrderOverviewController = $this->getMockBuilder(OrderOverviewController::class)->setMethods(['getPaymentMethod'])->getMock();
         $oOrderOverviewController->expects($this->any())->method('getPaymentMethod')->willReturn('nets_easy');
-        $oOrderOverview = $this->getMockBuilder(OrderOverview::class)->setMethods(['getEasyStatus', 'getPaymentMethod'])->getMock();
+        $oOrderOverview = $this->getMockBuilder(OrderOverview::class)->setMethods(['getPaymentMethod'])->getMock();
         $oOrderOverview->expects($this->any())->method('getPaymentMethod')->willReturn('nets_easy');
-        $oOrderOverview->expects($this->any())->method('getEasyStatus')->willReturn(array(
+
+        $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->setMethods(['getEasyStatus'])->getMock();
+        $oPaymentStatus->expects($this->any())->method('getEasyStatus')->willReturn(array(
             'payStatus' => 'reserved',
             'langStatus' => 'en'
         ));
-        $oOrderOverview = new OrderOverviewController($oOrderOverviewController, $oOrderOverview);
+        $oOrderOverview = new OrderOverviewController($oOrderOverviewController, $oOrderOverview, null, null, null, $oPaymentStatus);
         $result = $oOrderOverview->isEasy(100);
         $this->assertArrayHasKey('payStatus', $result);
         $this->assertNotEmpty($result['payStatus']);
@@ -45,9 +50,9 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
      */
     public function testGetPayLangStatus()
     {
-        $oOrderOverview = $this->getMockBuilder(OrderOverview::class)->setMethods(['getPaymentStatus'])->getMock();
-        $oOrderOverview->expects($this->any())->method('getPaymentStatus')->willReturn(true);
-        $oOrderOverview = new OrderOverviewController(null, $oOrderOverview);
+        $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->setMethods(['getPaymentStatus'])->getMock();
+        $oPaymentStatus->expects($this->any())->method('getPaymentStatus')->willReturn(true);
+        $oOrderOverview = new OrderOverviewController(null, null, null, null, null, $oPaymentStatus);
         $result = $oOrderOverview->getPayLangStatus(100, 100);
         $this->assertTrue($result);
     }
@@ -58,13 +63,13 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
 
     public function testGetOrderCharged()
     {
-        $oOrder = $this->getMockBuilder(OrderOverview::class)->setMethods(['getOrderCharged'])->getMock();
-        $oOrder->expects($this->any())->method('getOrderCharged')->willReturn(1);
+        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->setMethods(['getOrderCharged'])->getMock();
+        $oPaymentOperations->expects($this->any())->method('getOrderCharged')->willReturn(1);
         $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
         $utils->expects($this->any())->method('redirect')->willReturn('test');
-        $oOrderOverview = new OrderOverviewController(null, $oOrder, null, $utils);
+        $oOrderOverview = new OrderOverviewController(null, null, null, $utils, null, null, $oPaymentOperations);
         $result = $oOrderOverview->getOrderCharged();
         $this->assertEquals('test', $result);
     }
@@ -75,13 +80,13 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
 
     public function testGetOrderRefund()
     {
-        $oOrder = $this->getMockBuilder(OrderOverview::class)->setMethods(['getOrderRefund'])->getMock();
-        $oOrder->expects($this->any())->method('getOrderRefund')->willReturn(1);
+        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->setMethods(['getOrderRefund'])->getMock();
+        $oPaymentOperations->expects($this->any())->method('getOrderRefund')->willReturn(1);
         $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
         $utils->expects($this->any())->method('redirect')->willReturn('test');
-        $oOrderOverview = new OrderOverviewController(null, $oOrder, null, $utils);
+        $oOrderOverview = new OrderOverviewController(null, null, null, $utils, null, null, $oPaymentOperations);
         $result = $oOrderOverview->getOrderRefund();
         $this->assertEquals('test', $result);
     }
@@ -92,8 +97,8 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
 
     public function testGetOrderCancel()
     {
-        $oOrder = $this->getMockBuilder(OrderOverviewController::class)->setMethods(['getOrderItems'])->getMock();
-        $oOrder->expects($this->any())->method('getOrderItems')->willReturn(array(
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(array(
             'totalAmt' => '100',
             'items' => 'items'
         ));
@@ -105,7 +110,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn("{'chargeId':'dummyChargeId'}");
         $oCommonHelper->expects($this->any())->method('getVoidPaymentUrl')->willReturn('url');
         $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(true);
-        $oOrderOverview = new OrderOverviewController($oOrder, null, $oCommonHelper, $utils);
+        $oOrderOverview = new OrderOverviewController(null, null, $oCommonHelper, $utils, $oOrderItems);
         $result = $oOrderOverview->getOrderCancel();
         $this->assertEquals('tested', $result);
     }
@@ -116,9 +121,9 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
 
     public function testGetOrderItems()
     {
-        $oOrderOverview = $this->getMockBuilder(OrderOverview::class)->setMethods(['getOrderItems'])->getMock();
-        $oOrderOverview->expects($this->any())->method('getOrderItems')->willReturn(true);
-        $oOrderOverview = new OrderOverviewController(null, $oOrderOverview);
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(true);
+        $oOrderOverview = new OrderOverviewController(null, null, null, null, $oOrderItems);
         $result = $oOrderOverview->getOrderItems(100);
         $this->assertTrue($result);
     }
@@ -205,14 +210,13 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
             $this->assertNotEmpty($result);
             $this->assertArrayHasKey('refundedItems', $result);
         }
-        
+
         $response = json_decode($response, true);
         $response['payment']['summary']['reservedAmount'] = 1233;
         $result = $this->oOrderOverviewController->getLists($response, $item, $item, $item);
         if ($result) {
             $this->assertNotEmpty($result);
         }
-        
     }
 
     /*
@@ -317,11 +321,10 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
     {
         $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getPaymentId'])->getMock();
         $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(true);
-        
+
         $oOrderOverviewController = new OrderOverviewController(null, null, $oCommonHelper, null);
         $result = $oOrderOverviewController->getPaymentId(100);
         $this->assertTrue($result);
-         
     }
 
     /**
@@ -504,4 +507,5 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
              }';
     }
 
+    
 }

@@ -13,7 +13,6 @@ class NetsLogTest extends \Codeception\Test\Unit
      * @var \UnitTester
      */
     protected $oNetsLog;
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -26,7 +25,7 @@ class NetsLogTest extends \Codeception\Test\Unit
      */
     public function testLog()
     {
-        $result = NetsLog::log(true, "NetsOrderController, constructor");
+        $result = $this->oNetsLog->log(true, "NetsOrderController, constructor");
         $this->assertTrue($result);
     }
 
@@ -37,12 +36,12 @@ class NetsLogTest extends \Codeception\Test\Unit
     {
         $this->oNetsResponse = \oxNew(\Es\NetsEasy\Tests\Unit\Controller\Admin\OrderOverviewControllerTest::class);
         $response = $this->oNetsResponse->getNetsPaymentResponce();
-        $result = NetsLog::utf8_ensure(json_decode($response, true));
+        $result = $this->oNetsLog->utf8_ensure(json_decode($response, true));
         $this->assertNotEmpty($result);
         $items = new \stdClass;
         $items->name = 'ABC';
         $items->amount = 100;
-        $result = NetsLog::utf8_ensure($items);
+        $result = $this->oNetsLog->utf8_ensure($items);
         $this->assertNotEmpty($result);
     }
 
@@ -51,9 +50,9 @@ class NetsLogTest extends \Codeception\Test\Unit
      */
     public function testSetTransactionId()
     {
-        $result = NetsLog::setTransactionId(999999, 999999);
+        $result = $this->oNetsLog->setTransactionId(999999, 999999);
         $this->assertNull($result);
-        $result = NetsLog::setTransactionId(null, null);
+        $result = $this->oNetsLog->setTransactionId(null, null);
         $this->assertNull($result);
     }
 

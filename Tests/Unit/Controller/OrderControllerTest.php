@@ -2,8 +2,8 @@
 
 namespace Es\NetsEasy\Tests\Unit\Controller;
 
-use \Es\NetsEasy\extend\Application\Controller\OrderController;
-use \Es\NetsEasy\extend\Application\Models\Order as NetsOrder;
+use \Es\NetsEasy\ShopExtend\Application\Controller\OrderController;
+use \Es\NetsEasy\ShopExtend\Application\Models\Order as NetsOrder;
 use OxidEsales\Eshop\Application\Model\Payment;
 use OxidEsales\Eshop\Core\Field;
 use OxidEsales\Eshop\Core\UtilsObject;

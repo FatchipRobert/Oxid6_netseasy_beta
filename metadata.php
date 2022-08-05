@@ -28,16 +28,13 @@ $aModule = array(
         'en' => 'Nets safe online payments'
     ),
     'controllers' => array(
-        'nets_order_overview' => \Es\NetsEasy\extend\Application\Controller\Admin\OrderOverviewController::class
+        'nets_order_overview' => \Es\NetsEasy\ShopExtend\Application\Controller\Admin\OrderOverviewController::class
     ),
     'extend' => array(
-        \OxidEsales\Eshop\Application\Controller\Admin\OrderOverview::class => \Es\NetsEasy\extend\Application\Controller\Admin\OrderOverviewController::class,
-        \OxidEsales\Eshop\Application\Controller\OrderController::class => \Es\NetsEasy\extend\Application\Controller\OrderController::class,
-        \OxidEsales\Eshop\Application\Controller\PaymentController::class => \Es\NetsEasy\extend\Application\Controller\PaymentController::class,
-        \OxidEsales\Eshop\Application\Controller\ThankYouController::class => \Es\NetsEasy\extend\Application\Controller\ThankyouController::class,
-        \Es\NetsEasy\extend\Application\Models\PaymentGateway::class => \Es\NetsEasy\extend\Application\Models\PaymentGateway::class,
-        \Es\NetsEasy\extend\Application\Models\Order::class => \Es\NetsEasy\extend\Application\Models\Order::class,
-        \Es\NetsEasy\Core\Events::class => \Es\NetsEasy\Core\Events::class
+        \OxidEsales\Eshop\Application\Controller\Admin\OrderOverview::class => \Es\NetsEasy\ShopExtend\Application\Controller\Admin\OrderOverviewController::class,
+        \OxidEsales\Eshop\Application\Controller\OrderController::class => \Es\NetsEasy\ShopExtend\Application\Controller\OrderController::class,
+        \OxidEsales\Eshop\Application\Controller\PaymentController::class => \Es\NetsEasy\ShopExtend\Application\Controller\PaymentController::class,
+        \OxidEsales\Eshop\Application\Controller\ThankYouController::class => \Es\NetsEasy\ShopExtend\Application\Controller\ThankyouController::class,
     ),
     'blocks' => array(
         array(

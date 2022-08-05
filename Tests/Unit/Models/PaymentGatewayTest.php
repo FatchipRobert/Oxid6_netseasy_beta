@@ -2,7 +2,7 @@
 
 namespace Es\NetsEasy\Tests\Unit\Models;
 
-use Es\NetsEasy\extend\Application\Models\PaymentGateway as NetsPaymentGateway;
+use Es\NetsEasy\ShopExtend\Application\Models\PaymentGateway as NetsPaymentGateway;
 
 class PaymentGatewayTest extends \Codeception\Test\Unit
 {

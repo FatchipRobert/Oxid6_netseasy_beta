@@ -25,8 +25,10 @@ class EventsTest extends \Codeception\Test\Unit
      */
     public function testOnActivate()
     {
+        \oxRegistry::getSession()->setVariable('isEventUnitTest','yes');
         $result = NetsEvent::onActivate();
         $this->assertNull($result);
+        \oxRegistry::getSession()->setVariable('isEventUnitTest','');
     }
 
     /**
@@ -34,26 +36,23 @@ class EventsTest extends \Codeception\Test\Unit
      */
     public function testOnDeactivate()
     {
+        \oxRegistry::getSession()->setVariable('isEventUnitTest','yes');
         $result = NetsEvent::onDeactivate();
         $this->assertNull($result);
+        \oxRegistry::getSession()->setVariable('isEventUnitTest','');
     }
 
     /**
      * Test case to checkTableStructure event
      */
-    public function testCheckTableStructure()
+    public function testExecuteModuleMigrations()
     {
-        $result = NetsEvent::checkTableStructure();
+        \oxRegistry::getSession()->setVariable('isEventUnitTest','yes');
+        $result = NetsEvent::executeModuleMigrations();
         $this->assertNull($result);
+        \oxRegistry::getSession()->setVariable('isEventUnitTest','');
     }
 
-    /**
-     * Test case to checkTableStructure event
-     */
-    public function testCreateTableStructure()
-    {
-        $result = NetsEvent::createTableStructure('oxnets');
-        $this->assertNull($result);
-    }
+     
 
 }

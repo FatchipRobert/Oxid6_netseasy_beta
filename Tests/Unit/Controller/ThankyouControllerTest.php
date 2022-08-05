@@ -2,7 +2,7 @@
 
 namespace Es\NetsEasy\Tests\Unit\Controller;
 
-use \Es\NetsEasy\extend\Application\Controller\ThankyouController as NetsThankYouController;
+use \Es\NetsEasy\ShopExtend\Application\Controller\ThankyouController as NetsThankYouController;
 use OxidEsales\Eshop\Core\Field;
 
 class ThankyouControllerTest extends \Codeception\Test\Unit

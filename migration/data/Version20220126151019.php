@@ -6,12 +6,17 @@ namespace Es\NetsEasy\Migrations;
 
 use Doctrine\DBAL\Schema\Schema;
 use Doctrine\Migrations\AbstractMigration;
+use Es\NetsEasy\Api\NetsPaymentTypes;
+use Es\NetsEasy\Api\NetsLog;
 
-final class Version20220126151019 extends AbstractMigration {
+final class Version20220126151019 extends AbstractMigration
+{
 
-    public function up(Schema $schema): void {
+    public function up(Schema $schema): void
+    {
+        
         $this->addSql("
-					CREATE TABLE `oxnets` (
+					CREATE TABLE IF NOT EXISTS `oxnets` (
 						`oxnets_id` int(10) unsigned NOT NULL auto_increment,
 						`req_data` text collate latin1_general_ci,
 						`ret_data` text collate latin1_general_ci,
@@ -33,10 +38,67 @@ final class Version20220126151019 extends AbstractMigration {
 						PRIMARY KEY  (`oxnets_id`)
 					) ENGINE=MyISAM AUTO_INCREMENT=1 DEFAULT CHARSET=latin1 COLLATE=latin1_general_ci;
 				");
+
+
+
+        //extend the oxuser table
+            $this->executeModifications();
+        
     }
 
-    public function down(Schema $schema): void {
+    public function down(Schema $schema): void
+    {
         $this->addSql('DROP TABLE oxnets');
+    }
+
+    /**
+     * Function to check and execute db modifications.
+     * @return null
+     */
+    public function executeModifications()
+    {
+        try {
+            $payment_types = NetsPaymentTypes::$nets_payment_types;
+            foreach ($payment_types as $payment_type) {
+                $payment_id = $payment_type['payment_id'];
+            }
+            //check if nets payment is completed
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
+            $payment_id_exists = $oDB->getOne("SELECT oxid FROM oxpayments WHERE oxid = ?", [
+                $payment_id
+            ]);
+            if (!$payment_id_exists) {
+                //create payment
+                $desc = NetsPaymentTypes::getNetsPaymentDesc($payment_id);
+                if (isset($desc) && $desc) {
+                    $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
+                    $sSql = "
+					INSERT INTO oxpayments (
+						`OXID`, `OXACTIVE`, `OXDESC`, `OXADDSUM`, `OXADDSUMTYPE`, `OXFROMBONI`, `OXFROMAMOUNT`, `OXTOAMOUNT`,
+						`OXVALDESC`, `OXCHECKED`, `OXDESC_1`, `OXVALDESC_1`, `OXDESC_2`, `OXVALDESC_2`,
+						`OXDESC_3`, `OXVALDESC_3`, `OXLONGDESC`, `OXLONGDESC_1`, `OXLONGDESC_2`, `OXLONGDESC_3`, `OXSORT`
+					) VALUES (
+						?, 1, ?, 0, 'abs', 0, 0, 1000000, '', 0, ?, '', '', '', '', '', '', '', '', '', 0
+					)
+				";
+                    $oDB->execute($sSql, [
+                        $payment_id,
+                        $desc,
+                        $desc
+                    ]);
+                }
+            }
+            //activate payment
+            $active = \oxRegistry::getSession()->getVariable('activeStatus');
+            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
+            $oDB->execute("UPDATE oxpayments SET oxactive = ? WHERE oxid = ?", [
+                $active,
+                $payment_id
+            ]);
+        } catch (Exception $e) {
+            NetsLog::log(self::$NetsLog, "nets_events, Exception:", $e->getMessage());
+            NetsLog::log(self::$NetsLog, "nets_events, Exception Trace:", $e->getTraceAsString());
+        }
     }
 
 }

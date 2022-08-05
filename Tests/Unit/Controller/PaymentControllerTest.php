@@ -2,7 +2,7 @@
 
 namespace Es\NetsEasy\Tests\Unit\Controller;
 
-use \Es\NetsEasy\extend\Application\Controller\PaymentController;
+use \Es\NetsEasy\ShopExtend\Application\Controller\PaymentController;
 
 class PaymentControllerTest extends \Codeception\Test\Unit
 {

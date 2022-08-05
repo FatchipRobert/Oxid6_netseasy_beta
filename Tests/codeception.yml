@@ -2,7 +2,7 @@ namespace: Es\NetsEasy\Tests\Codeception
 params:
     - Codeception/config/params.php
 paths:
-    tests: source\modules\es\esnetseasy\extend
+    tests: source\modules\es\esnetseasy\ShopExtend
     output: Codeception/_output
     data: Codeception/_data
     support: Codeception/_support
@@ -18,6 +18,6 @@ extensions:
 coverage:
     enabled: true
     include:
-        - source/modules/es/esnetseasy/extend/*
+        - source/modules/es/esnetseasy/ShopExtend/*
     exclude:
         - source/modules/es/esnetseasy/Tests/*   
