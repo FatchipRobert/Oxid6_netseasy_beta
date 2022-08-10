@@ -5,7 +5,7 @@ namespace Es\NetsEasy\ShopExtend\Application\Controller;
 /**
  * Class Extending thank you controller for adding payment id in front end
  */
-class ThankyouController extends \OxidEsales\Eshop\Application\Controller\ThankyouController
+class ThankyouController extends  ThankyouController_parent
 {
 
     protected $oOrder;
