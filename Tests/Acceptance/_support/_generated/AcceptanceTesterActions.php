@@ -1433,7 +1433,7 @@ trait AcceptanceTesterActions
      *
      * ``` php
      * <?php
-     * $I->selectOption('Which OS do you use?', array('Windows','Linux'));
+     * $I->selectOption('Which OS do you use?', ['Windows','Linux']);
      * ?>
      * ```
      *
@@ -1441,8 +1441,8 @@ trait AcceptanceTesterActions
      *
      * ``` php
      * <?php
-     * $I->selectOption('Which OS do you use?', array('text' => 'Windows')); // Only search by text 'Windows'
-     * $I->selectOption('Which OS do you use?', array('value' => 'windows')); // Only search by value 'windows'
+     * $I->selectOption('Which OS do you use?', ['text' => 'Windows']); // Only search by text 'Windows'
+     * $I->selectOption('Which OS do you use?', ['value' => 'windows']); // Only search by value 'windows'
      * ?>
      * ```
      *
@@ -2894,10 +2894,10 @@ trait AcceptanceTesterActions
      * <?php
      * // <input id="page" value="old" />
      * $I->pressKey('#page','a'); // => olda
-     * $I->pressKey('#page',array('ctrl','a'),'new'); //=> new
-     * $I->pressKey('#page',array('shift','111'),'1','x'); //=> old!!!1x
+     * $I->pressKey('#page',['ctrl','a'],'new'); //=> new
+     * $I->pressKey('#page',['shift','111'],'1','x'); //=> old!!!1x
      * $I->pressKey('descendant-or-self::*[@id='page']','u'); //=> oldu
-     * $I->pressKey('#name', array('ctrl', 'a'), \Facebook\WebDriver\WebDriverKeys::DELETE); //=>''
+     * $I->pressKey('#name', ['ctrl', 'a']), \Facebook\WebDriver\WebDriverKeys::DELETE); //=>''
      * ?>
      * ```
      *

@@ -3,6 +3,7 @@
 namespace Es\NetsEasy\ShopExtend\Application\Controller;
 
 use Es\NetsEasy\Api\NetsPaymentTypes;
+use OxidEsales\EshopCommunity\Core\Registry;
 
 /**
  * Class defines description of nets payment
@@ -26,28 +27,19 @@ class PaymentController extends PaymentController_parent
     }
 
     /**
-     * Function to get dyn value 
-     * @return string
-     */
-    public function getDynValue()
-    {
-        return parent::getDynValue();
-    }
-
-    /**
      * Function to get Nets Payment Types from db
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
      */
     public function getNetsPaymentTypes()
     {
-        $this->payment_types_active = array();
+        $this->payment_types_active = [];
         $netsPaymentTypesObj = \oxNew(NetsPaymentTypes::class);
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSql = "SELECT OXID FROM oxpayments WHERE oxactive = 1";
         $active_payment_ids = $oDB->getAll($sSql);
         if (!empty($active_payment_ids)) {
-            $payment_types = array();
+            $payment_types = [];
             foreach ($active_payment_ids as $payment_id) {
                 $payment_type = $netsPaymentTypesObj->getNetsPaymentType($payment_id[0]);
                 if (isset($payment_type) && $payment_type) {

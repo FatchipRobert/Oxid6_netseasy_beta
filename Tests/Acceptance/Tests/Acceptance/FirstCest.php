@@ -286,7 +286,7 @@ class FirstCest
         $I->see('Nets Easy', 'h1');
         $I->seeElement("//dl[@class='moduleDesc clear']");
         $I->seeElement("//input[@type='submit']");
-        $I->seeElement("//img[contains(@src,'nets_logo.png')]");
+        $I->seeElement("//img[contains(@src,'out/src/img/nets_logo.png')]");
     }
 
     public function loginToOxidAdminPanelAndSelectNetsEasyPaymentMethodInShopSettings(AcceptanceTester $I)

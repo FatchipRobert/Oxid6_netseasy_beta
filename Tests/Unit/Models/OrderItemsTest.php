@@ -30,9 +30,9 @@ class OrderItemsTest extends \Codeception\Test\Unit
     public function testGetOrderItems()
     {
         $response = $this->oOrderOverviewControllerTest->getNetsPaymentResponce();
-        $response = array('response' => json_decode($response, true));
+        $response = ['response' => json_decode($response, true)];
         $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getItemList'])->getMock();
-        $oOrderItems->expects($this->any())->method('getItemList')->willReturn(array('items' => array(0 => array(
+        $oOrderItems->expects($this->any())->method('getItemList')->willReturn(['items' => [0 => [
                     'reference' => '1205',
                     'name' => 'ABC',
                     'quantity' => 1,
@@ -43,7 +43,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
                     'grossTotalAmount' => 12500,
                     'netTotalAmount' => 10000,
                     'oxbprice' => 10000
-        ))));
+        ]]]);
 
         $orderItemsObj = new OrderItems($oOrderItems, null);
         $result = $orderItemsObj->getOrderItems(100);
@@ -57,7 +57,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
     public function testGetItemList()
     {
         $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
-        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(array(
+        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
             'quantity' => 1,
@@ -68,7 +68,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
             'grossTotalAmount' => 12500,
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
-        ));
+        ]);
         $oOrderItems->oxorderarticles__oxartnum = new Field(true);
         $oOrderItems->oxorderarticles__oxtitle = new Field(true);
         $oOrderItems->oxorderarticles__oxamount = new Field(true);
@@ -91,7 +91,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
     public function testGetGreetingCardItem()
     {
         $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
-        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(array(
+        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
             'quantity' => 1,
@@ -102,7 +102,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
             'grossTotalAmount' => 12500,
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
-        ));
+        ]);
         $oOrderItems->oxorder__oxgiftcardcost = new Field(true);
         $oOrderItems->oxorder__oxgiftcardvat = new Field(true);
 
@@ -118,7 +118,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
     public function testGetGiftWrappingItem()
     {
         $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
-        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(array(
+        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
             'quantity' => 1,
@@ -129,7 +129,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
             'grossTotalAmount' => 12500,
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
-        ));
+        ]);
         $oOrderItems->oxorder__oxwrapcost = new Field(true);
         $oOrderItems->oxorder__oxwrapvat = new Field(true);
 
@@ -145,7 +145,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
     public function testGetPayCost()
     {
         $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
-        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(array(
+        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
             'quantity' => 1,
@@ -156,7 +156,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
             'grossTotalAmount' => 12500,
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
-        ));
+        ]);
         $oOrderItems->oxorder__oxpaycost = new Field(true);
         $oOrderItems->oxorder__oxpayvat = new Field(true);
 

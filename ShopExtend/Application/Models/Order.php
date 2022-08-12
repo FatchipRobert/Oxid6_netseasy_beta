@@ -8,7 +8,7 @@ use Es\NetsEasy\Core\CommonHelper;
 use Es\NetsEasy\ShopExtend\Application\Models\BasketItems;
 use Es\NetsEasy\ShopExtend\Application\Models\Payment;
 use Es\NetsEasy\ShopExtend\Application\Models\Address;
-
+use OxidEsales\EshopCommunity\Core\Registry;
 /**
  * Nets oxOrder class
  * @mixin Es\NetsEasy\ShopExtend\Application\Model\Order
@@ -54,7 +54,7 @@ class Order
             $this->oCommonHelper = $commonHelper;
         }
         if (!$oxUtils) {
-            $this->oxUtils = \oxRegistry::getUtils();
+            $this->oxUtils = Registry::getUtils();
         } else {
             $this->oxUtils = $oxUtils;
         }
@@ -89,18 +89,18 @@ class Order
     public function createNetsTransaction($oOrder)
     {
         $this->_NetsLog = true;
-        \oxRegistry::getSession()->deleteVariable('nets_err_msg');
+        Registry::getSession()->deleteVariable('nets_err_msg');
         NetsLog::log($this->_NetsLog, "NetsOrder createNetsTransaction");
         $items = [];
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
         $this->integrationType = self::HOSTED;
-        $sUserID = \oxRegistry::getSession()->getVariable("usr");
+        $sUserID = Registry::getSession()->getVariable("usr");
         $oUser = \oxNew("oxuser", "core");
         $oUser->Load($sUserID);
         $sCountryId = $oUser->oxuser__oxcountryid->value;
-        $mySession = \oxRegistry::getSession();
+        $mySession = Registry::getSession();
         $oBasket = $mySession->getBasket();
-        $oID = $this->oOrder->updateOrdernr(\oxRegistry::getSession()
+        $oID = $this->oOrder->updateOrdernr(Registry::getSession()
                         ->getVariable('sess_challenge'));
         $this->oOrder->logOrderID($oOrder, $oID);
         $oID = $this->oOrder->getOrderId();
@@ -141,7 +141,7 @@ class Order
             return $this->oxPayment->getPaymentResponse($data, $oBasket, $oID);
         } catch (Exception $e) {
             $this->oOrder->logCatchErrors($e);
-            \oxRegistry::getUtils()->redirect(\oxRegistry::getConfig()
+            Registry::getUtils()->redirect(Registry::getConfig()
                             ->getSslShopUrl() . 'index.php?cl=netsorder');
         }
         return true;
@@ -156,7 +156,7 @@ class Order
         $this->netsLog->log($this->_NetsLog, 'oID: ', $oOrder->oxorder__oxordernr->value);
         // if oID is empty, use session value
         if (empty($oID)) {
-            $sGetChallenge = \oxRegistry::getSession()->getVariable('sess_challenge');
+            $sGetChallenge = Registry::getSession()->getVariable('sess_challenge');
             $oID = $sGetChallenge;
             $this->netsLog->log($this->_NetsLog, "NetsOrder, get oID from Session: ", $oID);
         }
@@ -175,7 +175,7 @@ class Order
         if (empty($error_message)) {
             $error_message = 'Payment Api Parameter issue';
         }
-        \oxRegistry::getSession()->setVariable('nets_err_msg', $error_message);
+        Registry::getSession()->setVariable('nets_err_msg', $error_message);
     }
 
    
@@ -185,7 +185,7 @@ class Order
      */
     public function processOrder($oUser)
     {
-        $sess_id = \oxRegistry::getSession()->getVariable('sess_challenge');
+        $sess_id = Registry::getSession()->getVariable('sess_challenge');
         //$resultSet = \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->select($query);
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT oxorder_id FROM oxnets WHERE oxorder_id = ? LIMIT 1";
@@ -198,22 +198,22 @@ class Order
             \OxidEsales\Eshop\Core\Registry::getSession()->setVariable("sess_challenge", $orderId);
         }
         // finalizing ordering process (validating, storing order into DB, executing payment, setting status ...)
-        $oBasket = \oxRegistry::getSession()->getBasket();
+        $oBasket = Registry::getSession()->getBasket();
         //$oOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
         $iSuccess = $this->oxOrder->finalizeOrder($oBasket, $oUser);
-        $paymentId = \oxRegistry::getSession()->getVariable('payment_id');
+        $paymentId = Registry::getSession()->getVariable('payment_id');
         $orderNr = null;
         if (isset($this->oxOrder->oxorder__oxordernr->value)) {
             $orderNr = $this->oxOrder->oxorder__oxordernr->value;
             $this->netsLog->log($this->_NetsLog, " refupdate NetsOrder, order nr", $this->oxOrder->oxorder__oxordernr->value);
-            \oxRegistry::getSession()->setVariable('orderNr', $orderNr);
+            Registry::getSession()->setVariable('orderNr', $orderNr);
         }
         $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
         $oDb->execute("UPDATE oxnets SET oxordernr = ?,  hash = ?, oxorder_id = ? WHERE transaction_id = ? ", [
             $orderNr,
-                    \oxRegistry::getSession()
+                    Registry::getSession()
                     ->getVariable('sess_challenge'),
-                    \oxRegistry::getSession()
+                    Registry::getSession()
                     ->getVariable('sess_challenge'),
             $paymentId
         ]);
@@ -228,7 +228,7 @@ class Order
         $this->netsLog->log($this->_NetsLog, " payment api status NetsOrder, response checkout url", $response['payment']['checkout']['url']);
         $this->netsLog->log($this->_NetsLog, " refupdate NetsOrder, response", $refUpdate);
         $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getUpdateRefUrl($paymentId), 'PUT', json_encode($refUpdate));
-        if (\oxRegistry::getConfig()->getConfigParam('nets_autocapture')) {
+        if (Registry::getConfig()->getConfigParam('nets_autocapture')) {
             $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
             $api_ret = json_decode($chargeResponse, true);
             if (isset($api_ret)) {
@@ -274,7 +274,7 @@ class Order
      */
     public function getOrderId()
     {
-        $mySession = \oxRegistry::getSession();
+        $mySession = Registry::getSession();
         $oBasket = $mySession->getBasket();
         return $oBasket->getOrderId();
     }
@@ -284,7 +284,7 @@ class Order
      */
     public function isEmbedded()
     {
-        $mode = \oxRegistry::getConfig()->getConfigParam('nets_checkout_mode');
+        $mode = Registry::getConfig()->getConfigParam('nets_checkout_mode');
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT OXACTIVE FROM oxpayments WHERE oxid = ? LIMIT 1";
         $payMethod = $oDB->getOne($sSQL_select, [

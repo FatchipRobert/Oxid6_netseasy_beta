@@ -8,6 +8,8 @@ use Es\NetsEasy\ShopExtend\Application\Models\OrderOverview;
 use Es\NetsEasy\ShopExtend\Application\Models\PaymentOperations;
 use Es\NetsEasy\ShopExtend\Application\Models\PaymentStatus;
 use Es\NetsEasy\ShopExtend\Application\Models\OrderItems;
+use OxidEsales\Eshop\Core\Registry;
+use OxidEsales\EshopCommunity\Core\Request;
 
 class OrderOverviewControllerTest extends \Codeception\Test\Unit
 {
@@ -35,10 +37,10 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
         $oOrderOverview->expects($this->any())->method('getPaymentMethod')->willReturn('nets_easy');
 
         $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->setMethods(['getEasyStatus'])->getMock();
-        $oPaymentStatus->expects($this->any())->method('getEasyStatus')->willReturn(array(
+        $oPaymentStatus->expects($this->any())->method('getEasyStatus')->willReturn([
             'payStatus' => 'reserved',
             'langStatus' => 'en'
-        ));
+        ]);
         $oOrderOverview = new OrderOverviewController($oOrderOverviewController, $oOrderOverview, null, null, null, $oPaymentStatus);
         $result = $oOrderOverview->isEasy(100);
         $this->assertArrayHasKey('payStatus', $result);
@@ -69,6 +71,8 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
         $utils->expects($this->any())->method('redirect')->willReturn('test');
+        $_POST['stoken'] = 'klllkk';
+        $_POST['force_admin_sid'] = 'klllkk';
         $oOrderOverview = new OrderOverviewController(null, null, null, $utils, null, null, $oPaymentOperations);
         $result = $oOrderOverview->getOrderCharged();
         $this->assertEquals('test', $result);
@@ -98,10 +102,10 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
     public function testGetOrderCancel()
     {
         $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
-        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(array(
+        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'totalAmt' => '100',
             'items' => 'items'
-        ));
+        ]);
         $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
@@ -135,33 +139,33 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
     public function testCheckPartialItems()
     {
         $oOrder = $this->getMockBuilder(OrderOverviewController::class)->setMethods(['getOrderItems', 'getChargedItems', 'getRefundedItems', 'getLists'])->getMock();
-        $oOrder->expects($this->any())->method('getOrderItems')->willReturn(array('items' => array(0 => array(
+        $oOrder->expects($this->any())->method('getOrderItems')->willReturn(['items' => [0 => [
                     'reference' => 'reference_abc',
                     'name' => 'ABC PRODUCT',
                     'quantity' => 2,
                     'oxbprice' => 1200
-        ))));
-        $oOrder->expects($this->any())->method('getChargedItems')->willReturn(array('reference_abc' => array(
+        ]]]);
+        $oOrder->expects($this->any())->method('getChargedItems')->willReturn(['reference_abc' => [
                 'reference' => 'reference_abc',
                 'name' => 'ABC PRODUCT',
                 'quantity' => 2,
                 'price' => 1200
-        )));
+        ]]);
 
         $oOrder->expects($this->any())->method('getLists')->willReturn('tested');
 
-        $oOrder->expects($this->any())->method('getRefundedItems')->willReturn(array('items' => array(0 => array(
+        $oOrder->expects($this->any())->method('getRefundedItems')->willReturn(['items' => [0 => [
                     'reference' => 'reference_abc',
                     'name' => 'ABC PRODUCT',
                     'quantity' => 1,
                     'oxbprice' => 1200
-        ))));
-        $chargedArr = array('reference_abc' => array(
+        ]]]);
+        $chargedArr = ['reference_abc' => [
                 'reference' => 'reference_abc',
                 'name' => 'ABC PRODUCT',
                 'quantity' => 2,
                 'price' => 1200
-        ));
+        ]];
 
         $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getApiUrl', 'getPaymentId'])->getMock();
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn('                
@@ -194,7 +198,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
     public function testGetLists()
     {
         $response = $this->getNetsPaymentResponce();
-        $item = array(
+        $item = [
             "reference" => "2103",
             "name" => "Wakeboard GROOVE",
             "quantity" => 1.0,
@@ -204,7 +208,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
             "taxAmount" => 5253,
             "grossTotalAmount" => 32900,
             "netTotalAmount" => 27647
-        );
+        ];
         $result = $this->oOrderOverviewController->getLists(json_decode($response, true), $item, $item, $item);
         if ($result) {
             $this->assertNotEmpty($result);
@@ -507,5 +511,4 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
              }';
     }
 
-    
 }

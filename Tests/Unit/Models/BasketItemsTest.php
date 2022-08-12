@@ -71,7 +71,7 @@ class BasketItemsTest extends \Codeception\Test\Unit
         $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
         $mockBuilder->setMethods(['getContents', 'getDeliveryCost', 'getBruttoPrice', 'getPaymentCost']);
         $basket = $mockBuilder->getMock();
-        $basket->expects($this->any())->method("getContents")->willReturn(array(
+        $basket->expects($this->any())->method("getContents")->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
             'quantity' => 1,
@@ -82,7 +82,7 @@ class BasketItemsTest extends \Codeception\Test\Unit
             'grossTotalAmount' => 12500,
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
-        ));
+        ]);
         $basket->expects($this->any())->method('getBruttoPrice')->willReturn(100);
         $basket->expects($this->any())->method('getDeliveryCost')->will($this->returnValue($basket));
 
@@ -109,7 +109,7 @@ class BasketItemsTest extends \Codeception\Test\Unit
         $basket->expects($this->any())->method('getTotalDiscount')->will($this->returnValue($basket));
 
 
-        $basket->expects($this->any())->method('getVouchers')->willReturn(array(0 => $vouchersObj));
+        $basket->expects($this->any())->method('getVouchers')->willReturn([0 => $vouchersObj]);
 
         $result = $this->basketItemsObject->getDiscountSum($basket);
         $this->assertNotEmpty($result);

@@ -11,7 +11,7 @@ $sLangName  = "English";
 // -------------------------------
 // RESOURCE_IDENTIFIER => STRING
 // -------------------------------
-$aLang = array(
+$aLang = [
     'charset'                               => 'UTF-8',
     'NETS_LIEFERADRESSE_TEXT'            => "Warning: The shipment will be send exclusively to the specified billing address.",
     'NETS_CESSION_TEXT_PREPAY_FORMAL'    => "Dear Customer, <br/> Please note that we work together to process our payments with nets AG. <br/> Please transfer the payment amount to the following bank account: <br/>",
@@ -24,7 +24,7 @@ $aLang = array(
     'NETS_PAYMENT_CANCEL_MESSAGE'        => "Transaction canceled",
     'NETS_PAYMENT_ERROR_MESSAGE'         => "Transaction failed",
     'NETS_ORDER_ERROR_MESSAGE'           => "Order failed - please check the basket",    
-);
+];
 
 /*
 [{ oxmultilang ident="GENERAL_YOUWANTTODELETE" }]

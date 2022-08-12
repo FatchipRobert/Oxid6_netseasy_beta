@@ -6,6 +6,7 @@ use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Api\NetsPaymentTypes;
 use Es\NetsEasy\Core\CommonHelper;
 use Es\NetsEasy\ShopExtend\Application\Models\OrderItems;
+use OxidEsales\EshopCommunity\Core\Request;
 
 /**
  * Class defines Nets payment operations in order view
@@ -48,14 +49,14 @@ class PaymentOperations
      */
     public function getOrderCharged()
     {
-        $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
-        $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
+        $oxorder = Request::getRequestParameter('oxorderid');
+        $orderno = Request::getRequestParameter('orderno');
         $data = $this->oOrderItems->getOrderItems($oxorder);
         $payment_id = $this->oCommonHelper->getPaymentId($oxorder);
         // call charge api here
         $chargeUrl = $this->oCommonHelper->getChargePaymentUrl($payment_id);
-        $ref = \oxRegistry::getConfig()->getRequestParameter('reference');
-        $chargeQty = \oxRegistry::getConfig()->getRequestParameter('charge');
+        $ref = Request::getRequestParameter('reference');
+        $chargeQty = Request::getRequestParameter('charge');
         if (isset($ref) && isset($chargeQty)) {
             $totalAmount = 0;
             foreach ($data['items'] as $key => $value) {
@@ -129,8 +130,8 @@ class PaymentOperations
 
     public function getOrderRefund()
     {
-        $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
-        $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
+        $oxorder = Request::getRequestParameter('oxorderid');
+        $orderno = Request::getRequestParameter('orderno');
         $data = $this->oOrderItems->getOrderItems($oxorder);
 
         $oCommonHelper = new CommonHelper();
@@ -138,10 +139,10 @@ class PaymentOperations
         $response = json_decode($api_return, true);
 
         $chargeResponse = $this->paymentOPObject->getChargeId($oxorder);
-        $ref = \oxRegistry::getConfig()->getRequestParameter('reference');
-        $refundQty = \oxRegistry::getConfig()->getRequestParameter('refund');
+        $ref = Request::getRequestParameter('reference');
+        $refundQty = Request::getRequestParameter('refund');
         $payment_id = $this->oCommonHelper->getPaymentId($oxorder);
-        $refundEachQtyArr = array();
+        $refundEachQtyArr = [];
         $breakloop = false;
         $cnt = 1;
 
@@ -221,13 +222,13 @@ class PaymentOperations
         }, $response['payment']['charges']);
 
         if (count($chargesMap) == 1) {
-            $result = array(
+            $result = [
                 "chargeId" => $response['payment']['charges'][0]['chargeId']
-            );
+            ];
         } else {
-            $result = array(
+            $result = [
                 "chargeId" => $chargesMap
-            );
+            ];
         }
         $result["response"] = $response;
         return $result;

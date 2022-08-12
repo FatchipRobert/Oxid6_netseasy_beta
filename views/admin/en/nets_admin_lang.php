@@ -7,7 +7,7 @@
  * @copyright 2021 Nets AS
  */
 $sLangName = "English";
-$aLang = array(
+$aLang = [
     'charset' => 'ISO-8859-15',
     'SHOP_MODULE_nets_blMode' => 'Mode',
     'SHOP_MODULE_nets_blMode_0' => 'Test',
@@ -52,5 +52,5 @@ $aLang = array(
     'SHOP_MODULE_nets_status' => 'Status',
     'SHOP_MODULE_nets_blDebug_log' => 'Debug',
     'nets' => 'Nets'
-);
+];
 

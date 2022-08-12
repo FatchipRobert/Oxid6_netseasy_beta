@@ -8,6 +8,7 @@ use Es\NetsEasy\Core\CommonHelper;
 use OxidEsales\Eshop\Core\Registry;
 use \oxRegistry;
 use Es\NetsEasy\ShopExtend\Application\Models\Payment;
+use OxidEsales\EshopCommunity\Core\Request;
 /**
  * Class controls nets payment process
  * It also shows the nets embedded checkout window
@@ -32,7 +33,7 @@ class OrderController extends OrderController_parent
      */
     public function __construct($oNetsOrder = null, $commonHelper = null, $oxUtils = null )
     {
-        $this->_NetsLog = \oxRegistry::getConfig()->getConfigParam('nets_blDebug_log');
+        $this->_NetsLog = Registry::getConfig()->getConfigParam('nets_blDebug_log');
         $this->netsLog = \oxNew(NetsLog::class);
         $this->netsLog->log($this->_NetsLog, "NetsOrderController, constructor");
         $this->payment = \oxNew(payment::class);
@@ -49,7 +50,7 @@ class OrderController extends OrderController_parent
         }
 
         if (!$oxUtils) {
-            $this->oxUtils = \oxRegistry::getUtils();
+            $this->oxUtils = Registry::getUtils();
         } else {
             $this->oxUtils = $oxUtils;
         }
@@ -112,8 +113,8 @@ class OrderController extends OrderController_parent
      */
     public function returnhosted()
     {
-        $paymentId = \oxRegistry::getSession()->getVariable('payment_id');
-        if (\oxRegistry::getConfig()->getConfigParam('nets_autocapture')) {
+        $paymentId = Registry::getSession()->getVariable('payment_id');
+        if (Registry::getConfig()->getConfigParam('nets_autocapture')) {
             $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
             $api_ret = json_decode($chargeResponse, true);
             $this->payment->savePaymentDetails($api_ret, $paymentId);

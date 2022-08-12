@@ -68,12 +68,12 @@ class PaymentTest extends \Codeception\Test\Unit
         $deliverAddrObj->company = 'XZY';
         $deliverAddrObj->firstname = 'firstname';
         $deliverAddrObj->lastname = 'lastname';
-        $daten = array('delivery_address' => $deliverAddrObj, 'email' => 'test@test.com');
-        $result = $this->paymentObject->prepareDatastringParams($daten, array(), $paymentId = null);
+        $daten = ['delivery_address' => $deliverAddrObj, 'email' => 'test@test.com'];
+        $result = $this->paymentObject->prepareDatastringParams($daten, [], $paymentId = null);
         $this->assertNotEmpty($result);
         $deliverAddrObj->company = '';
-        \oxRegistry::getConfig()->setConfigParam('nets_checkout_mode', true);
-        $result = $this->paymentObject->prepareDatastringParams($daten, array(), $paymentId = null);
+        \OxidEsales\EshopCommunity\Core\Registry::getConfig()->setConfigParam('nets_checkout_mode', true);
+        $result = $this->paymentObject->prepareDatastringParams($daten, [], $paymentId = null);
     }
 
     
@@ -88,7 +88,7 @@ class PaymentTest extends \Codeception\Test\Unit
         $basket = $mockBuilder->getMock();
         $basket->expects($this->any())->method("getOrderId")->willReturn(100);
 
-        \oxRegistry::getSession()->setBasket($basket);
+        \OxidEsales\EshopCommunity\Core\Registry::getSession()->setBasket($basket);
 
         $result = $this->paymentObject->getOrderId();
         $this->assertNotEmpty($result);

@@ -29,11 +29,11 @@ class PaymentStatusTest extends \Codeception\Test\Unit
     public function testGetEasyStatus()
     {
         $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->setMethods(['getOrderItems', 'getPaymentStatus'])->getMock();
-        $oPaymentStatus->expects($this->any())->method('getOrderItems')->willReturn(array(
+        $oPaymentStatus->expects($this->any())->method('getOrderItems')->willReturn([
             'totalAmt' => 100,
             'items' => 'items'
-        ));
-        $oPaymentStatus->expects($this->any())->method('getPaymentStatus')->willReturn(array('dbPayStatus' => true));
+        ]);
+        $oPaymentStatus->expects($this->any())->method('getPaymentStatus')->willReturn(['dbPayStatus' => true]);
 
         $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getVoidPaymentUrl', 'getPaymentId', 'getApiUrl'])->getMock();
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn("{'chargeId':'dummyChargeId'}");

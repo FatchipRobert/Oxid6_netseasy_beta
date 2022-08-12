@@ -58,7 +58,8 @@ final class Version20220126151019 extends AbstractMigration
     public function executeModifications()
     {
         try {
-            $payment_types = NetsPaymentTypes::$nets_payment_types;
+            $oNetsPaymentTypes = \oxNew(NetsPaymentTypes::class);
+            $payment_types = $oNetsPaymentTypes->nets_payment_types;
             foreach ($payment_types as $payment_type) {
                 $payment_id = $payment_type['payment_id'];
             }
@@ -69,7 +70,7 @@ final class Version20220126151019 extends AbstractMigration
             ]);
             if (!$payment_id_exists) {
                 //create payment
-                $desc = NetsPaymentTypes::getNetsPaymentDesc($payment_id);
+                $desc = $oNetsPaymentTypes->getNetsPaymentDesc($payment_id);
                 if (isset($desc) && $desc) {
                     $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
                     $sSql = "
@@ -89,7 +90,7 @@ final class Version20220126151019 extends AbstractMigration
                 }
             }
             //activate payment
-            $active = \oxRegistry::getSession()->getVariable('activeStatus');
+            $active = \OxidEsales\EshopCommunity\Core\Registry::getSession()->getVariable('activeStatus');
             $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             $oDB->execute("UPDATE oxpayments SET oxactive = ? WHERE oxid = ?", [
                 $active,

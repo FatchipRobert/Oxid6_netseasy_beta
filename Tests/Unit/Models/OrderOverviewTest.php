@@ -27,7 +27,7 @@ class OrderOverviewTest extends \Codeception\Test\Unit
     public function testGetShoppingCost()
     {
         $oOrderOverview = $this->getMockBuilder(OrderOverview::class)->setMethods(['getOrderItems'])->getMock();
-        $oOrderOverview->expects($this->any())->method('getOrderItems')->willReturn(array(
+        $oOrderOverview->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
             'quantity' => 1,
@@ -38,7 +38,7 @@ class OrderOverviewTest extends \Codeception\Test\Unit
             'grossTotalAmount' => 12500,
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
-        ));
+        ]);
         $oOrderOverview->oxorder__oxdelcost = new Field(true);
         $oOrderOverview->oxorder__oxdelvat = new Field(true);
 

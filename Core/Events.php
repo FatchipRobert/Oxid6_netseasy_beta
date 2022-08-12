@@ -11,7 +11,7 @@ use Exception;
 use Makaira\OxidConnectEssential\Utils\ModuleSettingsProvider;
 use OxidEsales\DoctrineMigrationWrapper\MigrationsBuilder;
 use Symfony\Component\Console\Output\BufferedOutput;
-
+use OxidEsales\EshopCommunity\Core\Registry;
 /**
  * Class defines what module does on Shop events.
  */
@@ -27,8 +27,8 @@ class Events
     static function onActivate()
     {
         // execute module migrations
-        \oxRegistry::getSession()->setVariable('activeStatus', 1);
-        if (empty(\oxRegistry::getSession()->getVariable('isEventUnitTest'))) {
+        Registry::getSession()->setVariable('activeStatus', 1);
+        if (empty(Registry::getSession()->getVariable('isEventUnitTest'))) {
             self::executeModuleMigrations();
         }
     }
@@ -39,8 +39,8 @@ class Events
      */
     static function onDeactivate()
     {
-        \oxRegistry::getSession()->setVariable('activeStatus', 0);
-        if (empty(\oxRegistry::getSession()->getVariable('isEventUnitTest'))) {
+        Registry::getSession()->setVariable('activeStatus', 0);
+        if (empty(Registry::getSession()->getVariable('isEventUnitTest'))) {
             self::executeModuleMigrations();
         }
     }
@@ -53,7 +53,7 @@ class Events
         $migrations = (new MigrationsBuilder())->build();
         $output = new BufferedOutput();
         $migrations->setOutput($output);
-        if (empty(\oxRegistry::getSession()->getVariable('isEventUnitTest'))) {
+        if (empty(Registry::getSession()->getVariable('isEventUnitTest'))) {
             $neeedsUpdate = $migrations->execute('migrations:up-to-date', 'esnetseasy');
             if ($neeedsUpdate) {
                 $migrations->execute('migrations:migrate', 'esnetseasy');

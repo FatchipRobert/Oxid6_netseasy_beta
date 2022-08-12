@@ -31,20 +31,7 @@ class PaymentControllerTest extends \Codeception\Test\Unit
             $this->assertNull($netsPaymentTypes);
         }
     }
-
-    /**
-     * Test case to get dyn value 
-     */
-    public function testGetDynValue()
-    {
-        $dynValue = $this->paymentObject->getDynValue();
-        if ($dynValue) {
-            $this->assertNotEmpty($dynValue);
-        } else {
-            $this->assertNull($dynValue);
-        }
-    }
-
+ 
     /**
      * Test case for get nets payment text
      */

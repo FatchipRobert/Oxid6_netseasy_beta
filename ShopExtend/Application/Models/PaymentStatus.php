@@ -49,9 +49,9 @@ class PaymentStatus
                 1,
                 $oxoder_id
             ]);
-            return array(
+            return [
                 "paymentErr" => "Order is cancelled. Payment not found."
-            );
+            ];
         }
         // Get order db status from oxorder if cancelled
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
@@ -163,7 +163,7 @@ class PaymentStatus
             $langStatus = "failed";
             $dbPayStatus = 0; // For payment status as Failed in oxnets db table
         }
-        return array("payStatus" => $paymentStatus, "langStatus" => $langStatus, "dbPayStatus" => $dbPayStatus);
+        return ["payStatus" => $paymentStatus, "langStatus" => $langStatus, "dbPayStatus" => $dbPayStatus];
     }
 
 }

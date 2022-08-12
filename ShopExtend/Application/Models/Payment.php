@@ -5,6 +5,7 @@ namespace Es\NetsEasy\ShopExtend\Application\Models;
 use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Api\NetsPaymentTypes;
 use Es\NetsEasy\Core\CommonHelper;
+use OxidEsales\EshopCommunity\Core\Registry;
 
 /**
  * Nets basket class
@@ -38,7 +39,7 @@ class Payment
             $this->oCommonHelper = $commonHelper;
         }
         $this->integrationType = self::HOSTED;
-        if (\oxRegistry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
+        if (Registry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
             $this->integrationType = self::EMBEDDED;
         }
     }
@@ -49,7 +50,7 @@ class Payment
      */
     public function getPaymentResponse($data, $oBasket, $oID)
     {
-        $modus = \oxRegistry::getConfig()->getConfigParam('nets_blMode');
+        $modus = Registry::getConfig()->getConfigParam('nets_blMode');
         if ($modus == 0) {
             $apiUrl = self::ENDPOINT_TEST;
         } else {
@@ -58,8 +59,8 @@ class Payment
         $this->netsLog->log(true, "NetsOrder, api request data here 2 : ", json_encode($data));
         $api_return = $this->oCommonHelper->getCurlResponse($apiUrl, 'POST', json_encode($data));
         $response = json_decode($api_return, true);
-        if (isset($response['paymentId'])) { 
-            \oxRegistry::getSession()->setVariable('payment_id', $response['paymentId']);
+        if (isset($response['paymentId'])) {
+            Registry::getSession()->setVariable('payment_id', $response['paymentId']);
         }
         if (!isset($response['paymentId'])) {
             $response['paymentId'] = null;
@@ -68,7 +69,7 @@ class Payment
         // create entry in oxnets table for transaction
         $this->netsLog->createTransactionEntry(json_encode($data), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
         // Set language for hosted payment page
-        $language = \oxRegistry::getLang()->getLanguageAbbr();
+        $language = Registry::getLang()->getLanguageAbbr();
         if ($language == 'en') {
             $lang = 'en-GB';
         }
@@ -99,9 +100,9 @@ class Payment
         if ($language == 'es') {
             $lang = 'es-ES';
         }
-        
+
         if ($this->integrationType == self::HOSTED) {
-            \oxRegistry::getUtils()->redirect($response["hostedPaymentPageUrl"] . "&language=$lang");
+            Registry::getUtils()->redirect($response["hostedPaymentPageUrl"] . "&language=$lang");
         }
         return $response['paymentId'];
     }
@@ -112,7 +113,7 @@ class Payment
      */
     public function getOrderId()
     {
-        $mySession = \oxRegistry::getSession();
+        $mySession = Registry::getSession();
         $oBasket = $mySession->getBasket();
         return $oBasket->getOrderId();
     }
@@ -145,18 +146,18 @@ class Payment
     {
         $delivery_address = $daten['delivery_address'];
         $data['checkout']['integrationType'] = $this->integrationType;
-        if (\oxRegistry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
-            $data['checkout']['url'] = urldecode(\oxRegistry::getConfig()->getShopUrl() . 'index.php?cl=thankyou');
+        if (Registry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
+            $data['checkout']['url'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=thankyou');
         } else {
-            $data['checkout']['returnUrl'] = urldecode(\oxRegistry::getConfig()->getShopUrl() . 'index.php?cl=order&fnc=returnhosted&paymentid=' . $paymentId);
-            $data['checkout']['cancelUrl'] = urldecode(\oxRegistry::getConfig()->getShopUrl() . 'index.php?cl=order');
+            $data['checkout']['returnUrl'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=order&fnc=returnhosted&paymentid=' . $paymentId);
+            $data['checkout']['cancelUrl'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=order');
         }
         // if autocapture is enabled in nets module settings, pass it to nets api
-        if (\oxRegistry::getConfig()->getConfigParam('nets_autocapture')) {
+        if (Registry::getConfig()->getConfigParam('nets_autocapture')) {
             $data['checkout']['charge'] = true;
         }
-        $data['checkout']['termsUrl'] = \oxRegistry::getConfig()->getConfigParam('nets_terms_url');
-        $data['checkout']['merchantTermsUrl'] = \oxRegistry::getConfig()->getConfigParam('nets_merchant_terms_url');
+        $data['checkout']['termsUrl'] = Registry::getConfig()->getConfigParam('nets_terms_url');
+        $data['checkout']['merchantTermsUrl'] = Registry::getConfig()->getConfigParam('nets_merchant_terms_url');
         $data['checkout']['merchantHandlesConsumerData'] = true;
         $data['checkout']['consumer'] = [
             'email' => $daten['email'],

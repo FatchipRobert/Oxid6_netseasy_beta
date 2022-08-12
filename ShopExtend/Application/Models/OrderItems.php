@@ -48,7 +48,7 @@ class OrderItems
         $oArticles->init('oxorderarticle');
         $oArticles->selectString($sSelect);
         $totalOrderAmt = 0;
-        $items = array();
+        $items = [];
         foreach ($oArticles as $listitem) {
             $items[] = $this->oOrderItems->getItemList($listitem);
             $totalOrderAmt += $this->oOrderItems->prepareAmount($listitem->oxorderarticles__oxbrutprice->rawValue);
@@ -83,10 +83,10 @@ class OrderItems
                 $totalOrderAmt += $this->prepareAmount($item->oxorder__oxdelcost->rawValue);
             }
         }
-        return array(
+        return [
             "items" => $items,
             "totalAmt" => $totalOrderAmt
-        );
+        ];
     }
 
     /*
@@ -109,7 +109,6 @@ class OrderItems
             'oxbprice' => $listitem->oxorderarticles__oxbprice->rawValue
         ];
     }
- 
 
     /*
      * Function to Get card item
@@ -173,7 +172,6 @@ class OrderItems
             'oxbprice' => $item->oxorder__oxpaycost->rawValue
         ];
     }
- 
 
     /*
      * Function to prepare amount

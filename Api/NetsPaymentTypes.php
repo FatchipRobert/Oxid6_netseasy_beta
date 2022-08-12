@@ -10,15 +10,15 @@ namespace Es\NetsEasy\Api;
 class NetsPaymentTypes
 {
 
-    public $nets_payment_types = Array(
-        Array(
+    public $nets_payment_types = [
+        [
             'payment_id' => 'nets_easy',
             'payment_type' => 'netseasy',
             'payment_option_name' => 'nets_easy_active',
             'payment_desc' => 'Nets Easy',
             'payment_shortdesc' => 'Nets Easy'
-        )
-    );
+        ]
+    ];
 
     /**
      * Function to get Nets Payment Type

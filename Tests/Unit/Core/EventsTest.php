@@ -4,6 +4,7 @@ namespace Es\NetsEasy\Tests\Unit\Core;
 
 use Es\NetsEasy\Core\Events as NetsEvent;
 use OxidEsales\Eshop\Core\Field;
+use OxidEsales\EshopCommunity\Core\Registry;
 
 class EventsTest extends \Codeception\Test\Unit
 {
@@ -25,10 +26,10 @@ class EventsTest extends \Codeception\Test\Unit
      */
     public function testOnActivate()
     {
-        \oxRegistry::getSession()->setVariable('isEventUnitTest','yes');
+        Registry::getSession()->setVariable('isEventUnitTest', 'yes');
         $result = NetsEvent::onActivate();
         $this->assertNull($result);
-        \oxRegistry::getSession()->setVariable('isEventUnitTest','');
+        Registry::getSession()->setVariable('isEventUnitTest', '');
     }
 
     /**
@@ -36,10 +37,10 @@ class EventsTest extends \Codeception\Test\Unit
      */
     public function testOnDeactivate()
     {
-        \oxRegistry::getSession()->setVariable('isEventUnitTest','yes');
+        Registry::getSession()->setVariable('isEventUnitTest', 'yes');
         $result = NetsEvent::onDeactivate();
         $this->assertNull($result);
-        \oxRegistry::getSession()->setVariable('isEventUnitTest','');
+        Registry::getSession()->setVariable('isEventUnitTest', '');
     }
 
     /**
@@ -47,12 +48,10 @@ class EventsTest extends \Codeception\Test\Unit
      */
     public function testExecuteModuleMigrations()
     {
-        \oxRegistry::getSession()->setVariable('isEventUnitTest','yes');
+        Registry::getSession()->setVariable('isEventUnitTest', 'yes');
         $result = NetsEvent::executeModuleMigrations();
         $this->assertNull($result);
-        \oxRegistry::getSession()->setVariable('isEventUnitTest','');
+        Registry::getSession()->setVariable('isEventUnitTest', '');
     }
-
-     
 
 }

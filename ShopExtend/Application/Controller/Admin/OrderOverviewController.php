@@ -8,6 +8,7 @@ use Es\NetsEasy\ShopExtend\Application\Models\OrderOverview;
 use Es\NetsEasy\ShopExtend\Application\Models\OrderItems;
 use Es\NetsEasy\ShopExtend\Application\Models\PaymentStatus;
 use Es\NetsEasy\ShopExtend\Application\Models\PaymentOperations;
+use OxidEsales\EshopCommunity\Core\Request;
 
 /**
  * Class controls Nets Order Overview - In use for admin order list customization
@@ -86,10 +87,10 @@ class OrderOverviewController extends OrderOverviewController_parent
         $payMethod = $this->oOrderOverviewController->getPaymentMethod($oxoder_id);
         if ($payMethod == 'nets_easy') {
             $allStatus = $this->oPaymentStatus->getEasyStatus($oxoder_id);
-            $allStatusReturn = array(
+            $allStatusReturn = [
                 'payStatus' => $allStatus['payStatus'],
                 'langStatus' => $allStatus['langStatus']
-            );
+            ];
         }
         return $allStatusReturn;
     }
@@ -110,8 +111,8 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     public function getOrderCharged()
     {
-        $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
-        $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
+        $stoken = Request::getRequestParameter('stoken');
+        $admin_sid = Request::getRequestParameter('force_admin_sid');
         $this->oPaymentOperations->getOrderCharged();
         return $this->oxUtils->redirect($this->getConfig()
                                 ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
@@ -124,8 +125,8 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     public function getOrderRefund()
     {
-        $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
-        $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
+        $stoken = Request::getRequestParameter('stoken');
+        $admin_sid = Request::getRequestParameter('force_admin_sid');
         $this->oPaymentOperations->getOrderRefund();
         return $this->oxUtils->redirect($this->getConfig()
                                 ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
@@ -138,10 +139,10 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     public function getOrderCancel()
     {
-        $stoken = \oxRegistry::getConfig()->getRequestParameter('stoken');
-        $admin_sid = \oxRegistry::getConfig()->getRequestParameter('force_admin_sid');
-        $oxorder = \oxRegistry::getConfig()->getRequestParameter('oxorderid');
-        $orderno = \oxRegistry::getConfig()->getRequestParameter('orderno');
+        $stoken = Request::getRequestParameter('stoken');
+        $admin_sid = Request::getRequestParameter('force_admin_sid');
+        $oxorder = Request::getRequestParameter('oxorderid');
+        $orderno = Request::getRequestParameter('orderno');
         $data = $this->oOrderOverviewController->getOrderItems($oxorder);
         $payment_id = $this->oCommonHelper->getPaymentId($oxorder);
         // call cancel api here
@@ -181,11 +182,11 @@ class OrderOverviewController extends OrderOverviewController_parent
         $refundedItems = [];
         $itemsList = [];
         foreach ($prodItems['items'] as $items) {
-            $products[$items['reference']] = array(
+            $products[$items['reference']] = [
                 'name' => $items['name'],
                 'quantity' => $items['quantity'],
                 'price' => $items['oxbprice']
-            );
+            ];
         }
         $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $this->oCommonHelper->getPaymentId($oxid), 'GET');
         $response = json_decode($api_return, true);
@@ -209,12 +210,12 @@ class OrderOverviewController extends OrderOverviewController_parent
                     $chargedItems[$key]['quantity'] = $qty;
             }
             if ($qty > 0) {
-                $itemsList[] = array(
+                $itemsList[] = [
                     'name' => $prod['name'],
                     'reference' => $key,
                     'quantity' => $qty,
                     'price' => number_format((float) ($prod['price']), 2, '.', '')
-                );
+                ];
             }
             if (array_key_exists($key, $chargedItems) && array_key_exists($key, $refundedItems)) {
                 if ($prod['quantity'] == $chargedItems[$key]['quantity'] && $chargedItems[$key]['quantity'] == $refundedItems[$key]['quantity']) {
@@ -335,18 +336,18 @@ class OrderOverviewController extends OrderOverviewController_parent
                     $qty = $chargedItems[$values['orderItems'][$i]['reference']]['quantity'] + $values['orderItems'][$i]['quantity'];
                     $price = $chargedItems[$values['orderItems'][$i]['reference']]['price'] + number_format((float) ($values['orderItems'][$i]['grossTotalAmount'] / 100), 2, '.', '');
                     $priceGross = $price / $qty;
-                    $chargedItems[$values['orderItems'][$i]['reference']] = array(
+                    $chargedItems[$values['orderItems'][$i]['reference']] = [
                         'name' => $values['orderItems'][$i]['name'],
                         'quantity' => $qty,
                         'price' => $priceGross
-                    );
+                    ];
                 } else {
                     $priceOne = $values['orderItems'][$i]['grossTotalAmount'] / $values['orderItems'][$i]['quantity'];
-                    $chargedItems[$values['orderItems'][$i]['reference']] = array(
+                    $chargedItems[$values['orderItems'][$i]['reference']] = [
                         'name' => $values['orderItems'][$i]['name'],
                         'quantity' => $values['orderItems'][$i]['quantity'],
                         'price' => number_format((float) ($priceOne / 100), 2, '.', '')
-                    );
+                    ];
                 }
             }
         }
@@ -368,17 +369,17 @@ class OrderOverviewController extends OrderOverviewController_parent
                 if (array_key_exists($values['orderItems'][$i]['reference'], $refundedItems)) {
                     $qty = $refundedItems[$values['orderItems'][$i]['reference']]['quantity'] + $values['orderItems'][$i]['quantity'];
                     $price = $values['orderItems'][$i]['grossTotalAmount'] * $qty;
-                    $refundedItems[$values['orderItems'][$i]['reference']] = array(
+                    $refundedItems[$values['orderItems'][$i]['reference']] = [
                         'name' => $values['orderItems'][$i]['name'],
                         'quantity' => $qty,
                         'price' => number_format((float) ($price / 100), 2, '.', '')
-                    );
+                    ];
                 } else {
-                    $refundedItems[$values['orderItems'][$i]['reference']] = array(
+                    $refundedItems[$values['orderItems'][$i]['reference']] = [
                         'name' => $values['orderItems'][$i]['name'],
                         'quantity' => $values['orderItems'][$i]['quantity'],
                         'price' => number_format((float) ($values['orderItems'][$i]['grossTotalAmount'] / 100), 2, '.', '')
-                    );
+                    ];
                 }
             }
         }
