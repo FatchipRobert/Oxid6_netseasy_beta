@@ -34,7 +34,6 @@ class AddressTest extends \Codeception\Test\Unit
         $mockBuilder->setMethods(['getDb', 'getOne']);
         $mockDB = $mockBuilder->getMock();
         $oMockUser = $this->getMockBuilder(User::class)->setMethods(['Load'])->getMock();
-        //$oMockUser->expects($this->any())->method('Load')->willReturn(2);
         $sUserID = $this->getUserId();
         $oUser = \oxNew("oxuser", "core");
         $oUser->Load($sUserID);

@@ -7,11 +7,10 @@
 
 namespace Es\NetsEasy\Core;
 
-use Exception;
-use Makaira\OxidConnectEssential\Utils\ModuleSettingsProvider;
 use OxidEsales\DoctrineMigrationWrapper\MigrationsBuilder;
 use Symfony\Component\Console\Output\BufferedOutput;
 use OxidEsales\EshopCommunity\Core\Registry;
+
 /**
  * Class defines what module does on Shop events.
  */

@@ -9,6 +9,7 @@ use Es\NetsEasy\ShopExtend\Application\Models\OrderItems;
 use Es\NetsEasy\ShopExtend\Application\Models\PaymentStatus;
 use Es\NetsEasy\ShopExtend\Application\Models\PaymentOperations;
 use OxidEsales\EshopCommunity\Core\Request;
+use OxidEsales\EshopCommunity\Core\Registry;
 
 /**
  * Class controls Nets Order Overview - In use for admin order list customization
@@ -55,7 +56,7 @@ class OrderOverviewController extends OrderOverviewController_parent
             $this->oCommonHelper = $commonHelper;
         }
         if (!$oxUtils) {
-            $this->oxUtils = \oxRegistry::getUtils();
+            $this->oxUtils = Registry::getUtils();
         } else {
             $this->oxUtils = $oxUtils;
         }

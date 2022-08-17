@@ -3,13 +3,12 @@
 namespace Es\NetsEasy\ShopExtend\Application\Models;
 
 use Es\NetsEasy\Api\NetsLog;
-use Es\NetsEasy\Api\NetsPaymentTypes;
 use Es\NetsEasy\Core\CommonHelper;
 use OxidEsales\EshopCommunity\Core\Registry;
 
 /**
- * Nets basket class
- * @mixin Es\NetsEasy\ShopExtend\Application\Model\Order
+ * Nets Payment class
+ * @mixin Es\NetsEasy\ShopExtend\Application\Model\Payment
  */
 class Payment
 {
@@ -100,7 +99,6 @@ class Payment
         if ($language == 'es') {
             $lang = 'es-ES';
         }
-
         if ($this->integrationType == self::HOSTED) {
             Registry::getUtils()->redirect($response["hostedPaymentPageUrl"] . "&language=$lang");
         }

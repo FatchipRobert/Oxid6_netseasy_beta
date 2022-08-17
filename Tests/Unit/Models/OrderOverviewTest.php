@@ -56,7 +56,7 @@ class OrderOverviewTest extends \Codeception\Test\Unit
         $paymentMethod = $this->oOrderOverviewObject->getPaymentMethod(100);
         $this->assertFalse($paymentMethod);
     }
-    
+
     /*
      * Test case to prepare amount
      */

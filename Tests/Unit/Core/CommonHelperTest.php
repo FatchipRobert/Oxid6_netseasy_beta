@@ -4,6 +4,7 @@ namespace Es\NetsEasy\Tests\Unit\Core;
 
 use Es\NetsEasy\Core\CommonHelper as NetsCommonHelper;
 use OxidEsales\Eshop\Core\Field;
+use OxidEsales\Eshop\Core\Registry;
 
 class CommonHelperTest extends \Codeception\Test\Unit
 {
@@ -43,16 +44,16 @@ class CommonHelperTest extends \Codeception\Test\Unit
      */
     public function testGetSecretKey()
     {
-        \oxRegistry::getConfig()->setConfigParam('nets_blMode', 1);
+        Registry::getConfig()->setConfigParam('nets_blMode', 1);
         $result = $this->oNetsCommonHelper->getSecretKey();
-        if($result){
+        if ($result) {
             $this->assertNotNull($result);
-        } 
-        \oxRegistry::getConfig()->setConfigParam('nets_blMode', 0);
+        }
+        Registry::getConfig()->setConfigParam('nets_blMode', 0);
         $result = $this->oNetsCommonHelper->getSecretKey();
-        if($result){
+        if ($result) {
             $this->assertNotNull($result);
-        } 
+        }
     }
 
     /**
@@ -60,10 +61,10 @@ class CommonHelperTest extends \Codeception\Test\Unit
      */
     public function testGetApiUrl()
     {
-        \oxRegistry::getConfig()->setConfigParam('nets_blMode', 1);
+        Registry::getConfig()->setConfigParam('nets_blMode', 1);
         $result = $this->oNetsCommonHelper->getApiUrl();
         $this->assertNotEmpty($result);
-        \oxRegistry::getConfig()->setConfigParam('nets_blMode', 0);
+        Registry::getConfig()->setConfigParam('nets_blMode', 0);
         $result = $this->oNetsCommonHelper->getApiUrl();
         $this->assertNotEmpty($result);
     }
@@ -74,9 +75,9 @@ class CommonHelperTest extends \Codeception\Test\Unit
     public function testGetVoidPaymentUrl()
     {
         $result = $this->oNetsCommonHelper->getVoidPaymentUrl(100);
-        if($result){
+        if ($result) {
             $this->assertNotNull($result);
-        }else{
+        } else {
             $this->assertNull($result);
         }
     }
@@ -86,7 +87,7 @@ class CommonHelperTest extends \Codeception\Test\Unit
      */
     public function testGetCheckoutKey()
     {
-        \oxRegistry::getConfig()->setConfigParam('nets_blMode', 1);
+        Registry::getConfig()->setConfigParam('nets_blMode', 1);
         $result = $this->oNetsCommonHelper->getCheckoutKey();
         $this->assertNotNull($result);
     }
@@ -96,10 +97,10 @@ class CommonHelperTest extends \Codeception\Test\Unit
      */
     public function testGetUpdateRefUrl()
     {
-        \oxRegistry::getConfig()->setConfigParam('nets_blMode', 0);
+        Registry::getConfig()->setConfigParam('nets_blMode', 0);
         $result = $this->oNetsCommonHelper->getUpdateRefUrl(100);
         $this->assertNotNull($result);
-        \oxRegistry::getConfig()->setConfigParam('nets_blMode', 1);
+        Registry::getConfig()->setConfigParam('nets_blMode', 1);
         $result = $this->oNetsCommonHelper->getUpdateRefUrl(100);
         $this->assertNotNull($result);
     }

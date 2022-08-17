@@ -31,7 +31,7 @@ class PaymentControllerTest extends \Codeception\Test\Unit
             $this->assertNull($netsPaymentTypes);
         }
     }
- 
+
     /**
      * Test case for get nets payment text
      */

@@ -34,7 +34,6 @@ class OrderTest extends \Codeception\Test\Unit
     public function testCreateNetsTransaction()
     {
         Registry::getSession()->setVariable('usr', $this->getUserId());
-
         $oOrder = $this->getMockBuilder(NetsOrder::class)->setMethods(['updateOrdernr', 'logOrderID', 'getOrderId'])->getMock();
         $oOrder->expects($this->any())->method('updateOrdernr')->willReturn(1);
         $oOrder->expects($this->any())->method('logOrderID')->willReturn(1);
@@ -56,7 +55,6 @@ class OrderTest extends \Codeception\Test\Unit
             'oxbprice' => 10000
         ]);
         Registry::getSession()->setBasket($basket);
-
         $oNetsBasketItems = $this->getMockBuilder(NetsBasketItems::class)->setMethods(['getItemList', 'getDiscountItem', 'getProductItem'])->getMock();
         $oNetsBasketItems->expects($this->any())->method('getItemList')->willReturn(1);
         $oNetsBasketItems->expects($this->any())->method('getDiscountItem')->willReturn(1);
@@ -71,7 +69,7 @@ class OrderTest extends \Codeception\Test\Unit
             'grossTotalAmount' => 12500,
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
-       ]);
+        ]);
 
         $oNetsPayment = $this->getMockBuilder(NetsPayment::class)->setMethods(['prepareDatastringParams', 'getPaymentResponse'])->getMock();
         $oNetsPayment->expects($this->any())->method('prepareDatastringParams')->willReturn(1);
@@ -98,7 +96,6 @@ class OrderTest extends \Codeception\Test\Unit
         $oOrdeObj = new NetsOrder($oOrder, null, null);
         $result = $oOrdeObj->logOrderID($oOrder, null);
         $this->assertNull($result);
-
         $oOrdeObj = new NetsOrder($oOrder, null, $oOrder);
     }
 
@@ -154,8 +151,12 @@ class OrderTest extends \Codeception\Test\Unit
          }');
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
         $oCommonHelper->expects($this->any())->method('getUpdateRefUrl')->willReturn('url');
+
+        $oMockUser = $this->getMockBuilder(User::class)->setMethods(['getEncodedDeliveryAddress'])->getMock();
+        $oMockUser->expects($this->once())->method('getEncodedDeliveryAddress')->willReturn(1);
+
         $oOrdeObj = new NetsOrder(null, $oCommonHelper, null, $oMockOrder);
-        $result = $oOrdeObj->processOrder(100);
+        $result = $oOrdeObj->processOrder($oMockUser);
         $this->assertTrue($result);
     }
 
@@ -166,7 +167,6 @@ class OrderTest extends \Codeception\Test\Unit
     {
         $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['finalizeOrder'])->getMock();
         $oMockOrder->oxorder__oxordernr = new Field(true);
-        //$oMockOrder->oxorder__oxordernr = 100;
         $oOrdeObj = new NetsOrder(null, null, null, $oMockOrder);
         $result = $oOrdeObj->updateOrdernr(100);
         $this->assertTrue($result);
@@ -181,9 +181,7 @@ class OrderTest extends \Codeception\Test\Unit
         $mockBuilder->setMethods(['getOrderId']);
         $basket = $mockBuilder->getMock();
         $basket->expects($this->any())->method("getOrderId")->willReturn(100);
-
         Registry::getSession()->setBasket($basket);
-
         $result = $this->orderObject->getOrderId();
         $this->assertNotEmpty($result);
     }

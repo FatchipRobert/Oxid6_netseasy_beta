@@ -13,6 +13,7 @@ class NetsLogTest extends \Codeception\Test\Unit
      * @var \UnitTester
      */
     protected $oNetsLog;
+
     protected function setUp(): void
     {
         parent::setUp();

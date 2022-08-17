@@ -48,7 +48,7 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $basket->expects($this->any())->method("getProductsCount")->will($this->returnValue(true));
         Registry::getSession()->setBasket($basket);
 
-        $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
+        $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
 
@@ -89,7 +89,7 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $oOrder = $this->getMockBuilder(NetsOrder::class)->setMethods(['savePaymentDetails'])->getMock();
         $oOrder->expects($this->any())->method('savePaymentDetails')->willReturn(1);
 
-        $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
+        $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
         $utils->expects($this->any())->method('redirect')->willReturn('test');

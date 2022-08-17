@@ -123,13 +123,11 @@ class PaymentOperationsTest extends \Codeception\Test\Unit
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
         ]);
-
         $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getVoidPaymentUrl', 'getPaymentId', 'getApiUrl'])->getMock();
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn("{'chargeId':'dummyChargeId'}");
         $oCommonHelper->expects($this->any())->method('getVoidPaymentUrl')->willReturn('url');
         $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(true);
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
-
         $oPaymentOperations = new PaymentOperations($oPaymentOperations, $oCommonHelper);
         $result = $oPaymentOperations->getOrderRefund();
         $this->assertNull($result);
@@ -146,7 +144,6 @@ class PaymentOperationsTest extends \Codeception\Test\Unit
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn($response);
         $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(true);
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
-
         $oPaymentOperations = new PaymentOperations(null, $oCommonHelper);
         $result = $oPaymentOperations->getChargeId(100);
         $this->assertNotEmpty($result);

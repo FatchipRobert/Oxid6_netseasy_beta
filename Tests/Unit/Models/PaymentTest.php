@@ -9,6 +9,7 @@ use \Es\NetsEasy\ShopExtend\Application\Models\payment as NetsPayment;
 use Es\NetsEasy\Core\CommonHelper;
 use OxidEsales\Eshop\Core\Registry;
 use Es\NetsEasy\Tests\Unit\Models\OrderTest;
+
 class PaymentTest extends \Codeception\Test\Unit
 {
 
@@ -16,8 +17,7 @@ class PaymentTest extends \Codeception\Test\Unit
      * @var \UnitTester
      */
     protected $paymentObject;
-    protected  $oOrderTest;
-
+    protected $oOrderTest;
 
     protected function setUp(): void
     {
@@ -26,8 +26,6 @@ class PaymentTest extends \Codeception\Test\Unit
         $this->paymentObject = \oxNew(NetsPayment::class);
         $this->oOrderTest = \oxNew(OrderTest::class);
     }
-
-     
 
     /**
      * Test case to get payment response
@@ -76,8 +74,6 @@ class PaymentTest extends \Codeception\Test\Unit
         $result = $this->paymentObject->prepareDatastringParams($daten, [], $paymentId = null);
     }
 
-    
-
     /**
      * Test case to get Order Id of order
      */
@@ -87,13 +83,11 @@ class PaymentTest extends \Codeception\Test\Unit
         $mockBuilder->setMethods(['getOrderId']);
         $basket = $mockBuilder->getMock();
         $basket->expects($this->any())->method("getOrderId")->willReturn(100);
-
         \OxidEsales\EshopCommunity\Core\Registry::getSession()->setBasket($basket);
 
         $result = $this->paymentObject->getOrderId();
         $this->assertNotEmpty($result);
     }
- 
 
     /**
      * Test case for Order::savePaymentDetails()
@@ -141,7 +135,5 @@ class PaymentTest extends \Codeception\Test\Unit
         $sSQL_select = "SELECT oxid FROM oxuser LIMIT 1";
         return $oDB->getOne($sSQL_select);
     }
-
-    
 
 }

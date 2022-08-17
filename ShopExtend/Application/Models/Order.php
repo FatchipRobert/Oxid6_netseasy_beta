@@ -3,7 +3,6 @@
 namespace Es\NetsEasy\ShopExtend\Application\Models;
 
 use Es\NetsEasy\Api\NetsLog;
-use Es\NetsEasy\Api\NetsPaymentTypes;
 use Es\NetsEasy\Core\CommonHelper;
 use Es\NetsEasy\ShopExtend\Application\Models\BasketItems;
 use Es\NetsEasy\ShopExtend\Application\Models\Payment;
@@ -186,7 +185,6 @@ class Order
     public function processOrder($oUser)
     {
         $sess_id = Registry::getSession()->getVariable('sess_challenge');
-        //$resultSet = \OxidEsales\Eshop\Core\DatabaseProvider::getDb()->select($query);
         $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
         $sSQL_select = "SELECT oxorder_id FROM oxnets WHERE oxorder_id = ? LIMIT 1";
         $order_id = $oDB->getOne($sSQL_select, [
@@ -194,17 +192,13 @@ class Order
         ]);
         if (!empty($order_id)) {
             $orderId = \OxidEsales\Eshop\Core\UtilsObject::getInstance()->generateUID();
-            // $this->save();
             \OxidEsales\Eshop\Core\Registry::getSession()->setVariable("sess_challenge", $orderId);
         }
         // finalizing ordering process (validating, storing order into DB, executing payment, setting status ...)
         $oBasket = Registry::getSession()->getBasket();
-
         $sDeliveryAddress = $oUser->getEncodedDeliveryAddress();
         $_POST['sDeliveryAddressMD5'] = $sDeliveryAddress;
-        //Request::setRequestParameter('sDeliveryAddressMD5',$sDeliveryAddress);
         $iSuccess = $this->oxOrder->finalizeOrder($oBasket, $oUser);
-
         $paymentId = Registry::getSession()->getVariable('payment_id');
         $orderNr = null;
         if (isset($this->oxOrder->oxorder__oxordernr->value)) {
@@ -228,11 +222,9 @@ class Order
             'reference' => $orderNr,
             'checkoutUrl' => $response['payment']['checkout']['url']
         ];
-        //$this->netsLog->log($this->_NetsLog, " refupdate NetsOrder, order nr", $oOrder->oxorder__oxordernr->value);
         $this->netsLog->log($this->_NetsLog, " payment api status NetsOrder, response checkout url", $response['payment']['checkout']['url']);
         $this->netsLog->log($this->_NetsLog, " refupdate NetsOrder, response", $refUpdate);
         $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getUpdateRefUrl($paymentId), 'PUT', json_encode($refUpdate));
-        //if (Registry::getConfig()->getConfigParam('nets_autocapture')) {
         $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
         $api_ret = json_decode($chargeResponse, true);
         if (isset($api_ret)) {
@@ -246,7 +238,6 @@ class Order
                 }
             }
         }
-        //}
         return true;
     }
 
@@ -258,7 +249,6 @@ class Order
     public function updateOrdernr($hash)
     {
         $oID = $this->oOrder->getOrderId();
-        //$oOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
         $this->oxOrder->load($oID);
         $oOrdernr = $this->oxOrder->oxorder__oxordernr->value;
         $this->netsLog->log($this->_NetsLog, "NetsOrder, updateOrdernr: " . $oOrdernr . " for hash " . $hash);

@@ -67,7 +67,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
     {
         $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->setMethods(['getOrderCharged'])->getMock();
         $oPaymentOperations->expects($this->any())->method('getOrderCharged')->willReturn(1);
-        $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
+        $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
         $utils->expects($this->any())->method('redirect')->willReturn('test');
@@ -86,7 +86,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
     {
         $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->setMethods(['getOrderRefund'])->getMock();
         $oPaymentOperations->expects($this->any())->method('getOrderRefund')->willReturn(1);
-        $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
+        $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
         $utils->expects($this->any())->method('redirect')->willReturn('test');
@@ -106,7 +106,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
             'totalAmt' => '100',
             'items' => 'items'
         ]);
-        $mockBuilder = $this->getMockBuilder(\oxRegistry::class);
+        $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
         $utils->expects($this->any())->method('redirect')->willReturn('tested');
@@ -287,7 +287,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
             $this->assertStringStartsWith('http', $result);
             $this->assertNotNull($result);
         }
-        \oxRegistry::getConfig()->setConfigParam('nets_blMode', 1);
+        Registry::getConfig()->setConfigParam('nets_blMode', 1);
         $result = $this->oOrderOverviewController->getApiUrl();
         $this->assertNotEmpty($result);
     }

@@ -62,13 +62,11 @@ class PaymentStatusTest extends \Codeception\Test\Unit
     public function testGetPaymentStatus()
     {
         $response = $this->oOrderOverviewControllerTest->getNetsPaymentResponce();
-
         $result = $this->oPaymentStatus->getPaymentStatus(json_decode($response, true), 100);
         if ($result) {
             $this->assertNotEmpty($result);
             $this->assertArrayHasKey('payStatus', $result);
         }
-
         $response = json_decode($response, true);
         $response['payment']['summary']['reservedAmount'] = 1233;
         $result = $this->oPaymentStatus->getPaymentStatus($response, 100);
@@ -77,7 +75,5 @@ class PaymentStatusTest extends \Codeception\Test\Unit
             $this->assertArrayHasKey('payStatus', $result);
         }
     }
-
-    
 
 }

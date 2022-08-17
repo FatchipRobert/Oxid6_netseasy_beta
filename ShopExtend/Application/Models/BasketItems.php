@@ -160,7 +160,6 @@ class BasketItems
             'grossTotalAmount' => $grossAmount,
             'netTotalAmount' => $netAmount
         ];
-        //$sumAmt += $grossAmount;
     }
 
 }

@@ -1,7 +1,10 @@
 <?php
 
 namespace Es\NetsEasy\Core;
+
 use Es\NetsEasy\Api\NetsLog;
+use OxidEsales\EshopCommunity\Core\Registry;
+
 /**
  * Class defines Nets order common helper functions
  */
@@ -44,10 +47,10 @@ class CommonHelper
 
     public function getSecretKey()
     {
-        if (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 0) {
-            return \oxRegistry::getConfig()->getConfigParam('nets_secret_key_test');
+        if (Registry::getConfig()->getConfigParam('nets_blMode') == 0) {
+            return Registry::getConfig()->getConfigParam('nets_secret_key_test');
         } else {
-            return \oxRegistry::getConfig()->getConfigParam('nets_secret_key_live');
+            return Registry::getConfig()->getConfigParam('nets_secret_key_live');
         }
     }
 
@@ -73,7 +76,7 @@ class CommonHelper
 
     public function getApiUrl()
     {
-        if (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 0) {
+        if (Registry::getConfig()->getConfigParam('nets_blMode') == 0) {
             return self::ENDPOINT_TEST;
         } else {
             return self::ENDPOINT_LIVE;
@@ -88,7 +91,7 @@ class CommonHelper
 
     public function getChargePaymentUrl(string $paymentId)
     {
-        return (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE . $paymentId . '/charges' : self::ENDPOINT_TEST . $paymentId . '/charges';
+        return (Registry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE . $paymentId . '/charges' : self::ENDPOINT_TEST . $paymentId . '/charges';
     }
 
     /*
@@ -99,7 +102,7 @@ class CommonHelper
 
     public function getVoidPaymentUrl(string $paymentId)
     {
-        return (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE . $paymentId . '/cancels' : self::ENDPOINT_TEST . $paymentId . '/cancels';
+        return (Registry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE . $paymentId . '/cancels' : self::ENDPOINT_TEST . $paymentId . '/cancels';
     }
 
     /*
@@ -110,7 +113,7 @@ class CommonHelper
 
     public function getRefundPaymentUrl($chargeId)
     {
-        return (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE_CHARGES . $chargeId . '/refunds' : self::ENDPOINT_TEST_CHARGES . $chargeId . '/refunds';
+        return (Registry::getConfig()->getConfigParam('nets_blMode') == 1) ? self::ENDPOINT_LIVE_CHARGES . $chargeId . '/refunds' : self::ENDPOINT_TEST_CHARGES . $chargeId . '/refunds';
     }
 
     /*
@@ -120,9 +123,9 @@ class CommonHelper
 
     public function getLayout()
     {
-        return \oxRegistry::getConfig()->getActiveView()
+        return Registry::getConfig()->getActiveView()
                         ->getViewConfig()
-                        ->getModuleUrl("esnetseasy", "out/src/js/") . \oxRegistry::getConfig()->getConfigParam('nets_layout_mode') . '.js';
+                        ->getModuleUrl("esnetseasy", "out/src/js/") . Registry::getConfig()->getConfigParam('nets_layout_mode') . '.js';
     }
 
     /*
@@ -172,10 +175,10 @@ class CommonHelper
 
     public function getCheckoutKey()
     {
-        if (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 0) {
-            return \oxRegistry::getConfig()->getConfigParam('nets_checkout_key_test');
+        if (Registry::getConfig()->getConfigParam('nets_blMode') == 0) {
+            return Registry::getConfig()->getConfigParam('nets_checkout_key_test');
         } else {
-            return \oxRegistry::getConfig()->getConfigParam('nets_checkout_key_live');
+            return Registry::getConfig()->getConfigParam('nets_checkout_key_live');
         }
     }
 
@@ -186,7 +189,7 @@ class CommonHelper
 
     public function getUpdateRefUrl($paymentId)
     {
-        if (\oxRegistry::getConfig()->getConfigParam('nets_blMode') == 0) {
+        if (Registry::getConfig()->getConfigParam('nets_blMode') == 0) {
             return self::ENDPOINT_TEST . $paymentId . '/referenceinformation';
         } else {
             return self::ENDPOINT_LIVE . $paymentId . '/referenceinformation';

@@ -14,7 +14,6 @@ class BasketItemsTest extends \Codeception\Test\Unit
      */
     protected $basketItemsObject;
 
-
     protected function setUp(): void
     {
         parent::setUp();
@@ -37,9 +36,7 @@ class BasketItemsTest extends \Codeception\Test\Unit
         $mockBuilder->setMethods(['getPrice']);
         $basket = $mockBuilder->getMock();
         $basket->expects($this->any())->method("getPrice")->will($this->returnValue($price));
-
         $articleMockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Article::class)->setMethods(['getArticle', 'getPrice', 'getAmount'])->getMock();
-
         $articleMockBuilder->expects($this->any())->method("getArticle")->will($this->returnValue($basket));
         $articleMockBuilder->getArticle()->oxarticles__oxartnum = new Field(true);
         $articleMockBuilder->getArticle()->oxarticles__oxtitle = new Field(true);
@@ -85,7 +82,6 @@ class BasketItemsTest extends \Codeception\Test\Unit
         ]);
         $basket->expects($this->any())->method('getBruttoPrice')->willReturn(100);
         $basket->expects($this->any())->method('getDeliveryCost')->will($this->returnValue($basket));
-
         $basket->expects($this->any())->method('getBruttoPrice')->willReturn(100);
         $basket->expects($this->any())->method('getPaymentCost')->will($this->returnValue($basket));
 
@@ -104,11 +100,8 @@ class BasketItemsTest extends \Codeception\Test\Unit
         $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
         $mockBuilder->setMethods(['getTotalDiscount', 'getBruttoPrice', 'getVouchers']);
         $basket = $mockBuilder->getMock();
-        //$basket->expects($this->any())->method('getPaymentCosts')->willReturn(-100);
         $basket->expects($this->any())->method('getBruttoPrice')->willReturn(100);
         $basket->expects($this->any())->method('getTotalDiscount')->will($this->returnValue($basket));
-
-
         $basket->expects($this->any())->method('getVouchers')->willReturn([0 => $vouchersObj]);
 
         $result = $this->basketItemsObject->getDiscountSum($basket);

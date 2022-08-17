@@ -3,7 +3,6 @@
 namespace Es\NetsEasy\ShopExtend\Application\Controller;
 
 use Es\NetsEasy\Api\NetsPaymentTypes;
-use OxidEsales\EshopCommunity\Core\Registry;
 
 /**
  * Class defines description of nets payment

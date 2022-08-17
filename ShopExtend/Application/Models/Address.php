@@ -2,6 +2,8 @@
 
 namespace Es\NetsEasy\ShopExtend\Application\Models;
 
+use OxidEsales\Eshop\Core\Registry;
+
 /**
  * Nets address class
  * @mixin Es\NetsEasy\ShopExtend\Application\Model\Address
@@ -52,7 +54,7 @@ class Address
      */
     public function setAddress($oUser, $sTranslation, $oBasket)
     {
-        $oLang = \oxRegistry::getLang();
+        $oLang = Registry::getLang();
         $iLang = 0;
         $iLang = $oLang->getTplLanguage();
         if (!isset($iLang)) {
@@ -63,7 +65,7 @@ class Address
         } catch (oxLanguageException $oEx) {
             // is thrown in debug mode and has to be caught here, as smarty hangs otherwise!
         }
-        $daten['checkout_type'] = \oxRegistry::getConfig()->getConfigParam('nets_checkout_mode');
+        $daten['checkout_type'] = Registry::getConfig()->getConfigParam('nets_checkout_mode');
         $lang_abbr = $oLang->getLanguageAbbr($iLang);
         if (isset($lang_abbr) && $lang_abbr === 'en') {
             $daten['language'] = 'en_US';

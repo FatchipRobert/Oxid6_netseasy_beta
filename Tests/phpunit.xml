@@ -17,13 +17,13 @@
          verbose="false">
     <testsuites>
         <testsuite name="blog">
-            <directory suffix=".php">tests/</directory>
+            <directory suffix=".php">Tests/</directory>
         </testsuite>
     </testsuites>
 	
     <filter>
         <whitelist>
-            <directory suffix=".php">../extend/</directory>
+            <directory suffix=".php">../ShopExtend/</directory>
         </whitelist>
     </filter>
 </phpunit>

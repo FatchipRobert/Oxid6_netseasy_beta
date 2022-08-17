@@ -44,7 +44,6 @@ class OrderItemsTest extends \Codeception\Test\Unit
                     'netTotalAmount' => 10000,
                     'oxbprice' => 10000
         ]]]);
-
         $orderItemsObj = new OrderItems($oOrderItems, null);
         $result = $orderItemsObj->getOrderItems(100);
         $this->assertNotEmpty($result);
@@ -105,7 +104,6 @@ class OrderItemsTest extends \Codeception\Test\Unit
         ]);
         $oOrderItems->oxorder__oxgiftcardcost = new Field(true);
         $oOrderItems->oxorder__oxgiftcardvat = new Field(true);
-
         $orderItemsObj = new OrderItems($oOrderItems, null);
         $result = $orderItemsObj->getGreetingCardItem($oOrderItems);
         $this->assertNotEmpty($result);
@@ -132,7 +130,6 @@ class OrderItemsTest extends \Codeception\Test\Unit
         ]);
         $oOrderItems->oxorder__oxwrapcost = new Field(true);
         $oOrderItems->oxorder__oxwrapvat = new Field(true);
-
         $orderItemsObj = new OrderItems($oOrderItems, null);
         $result = $orderItemsObj->getGiftWrappingItem($oOrderItems);
         $this->assertNotEmpty($result);
@@ -159,7 +156,6 @@ class OrderItemsTest extends \Codeception\Test\Unit
         ]);
         $oOrderItems->oxorder__oxpaycost = new Field(true);
         $oOrderItems->oxorder__oxpayvat = new Field(true);
-
         $orderItemsObj = new OrderItems($oOrderItems, null);
         $result = $orderItemsObj->getPayCost($oOrderItems);
         $this->assertNotEmpty($result);

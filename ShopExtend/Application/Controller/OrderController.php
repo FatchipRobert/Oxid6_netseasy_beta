@@ -6,9 +6,8 @@ use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\ShopExtend\Application\Models\Order as NetsOrder;
 use Es\NetsEasy\Core\CommonHelper;
 use OxidEsales\Eshop\Core\Registry;
-use \oxRegistry;
 use Es\NetsEasy\ShopExtend\Application\Models\Payment;
-use OxidEsales\EshopCommunity\Core\Request;
+
 /**
  * Class controls nets payment process
  * It also shows the nets embedded checkout window
@@ -28,10 +27,11 @@ class OrderController extends OrderController_parent
     protected $oxUtils;
     protected $netsLog;
     protected $payment;
+
     /**
      * Constructor
      */
-    public function __construct($oNetsOrder = null, $commonHelper = null, $oxUtils = null )
+    public function __construct($oNetsOrder = null, $commonHelper = null, $oxUtils = null)
     {
         $this->_NetsLog = Registry::getConfig()->getConfigParam('nets_blDebug_log');
         $this->netsLog = \oxNew(NetsLog::class);
@@ -64,15 +64,12 @@ class OrderController extends OrderController_parent
         $this->netsLog->log($this->_NetsLog, "NetsOrderController, execute");
         $oBasket = $this->getSession()->getBasket();
         $oUser = $this->getUser();
-        if (!$oUser) {
-            // return 'user';
-        }
         if ($oBasket->getProductsCount()) {
             try {
                 if ($this->oNetsOrder->isEmbedded()) {
                     //finalizing ordering process (validating, storing order into DB, executing payment, setting status 
                     $this->oNetsOrder->processOrder($oUser);
-                    return $this->oxUtils->redirect(oxRegistry::getConfig()
+                    return $this->oxUtils->redirect(Registry::getConfig()
                                             ->getSslShopUrl() . 'index.php?cl=thankyou');
                 } else {
                     $this->getPaymentApiResponse();
@@ -114,11 +111,9 @@ class OrderController extends OrderController_parent
     public function returnhosted()
     {
         $paymentId = Registry::getSession()->getVariable('payment_id');
-        if (Registry::getConfig()->getConfigParam('nets_autocapture')) {
-            $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
-            $api_ret = json_decode($chargeResponse, true);
-            $this->payment->savePaymentDetails($api_ret, $paymentId);
-        }
+        $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
+        $api_ret = json_decode($chargeResponse, true);
+        $this->payment->savePaymentDetails($api_ret, $paymentId);
         return $this->oxUtils->redirect($this->getConfig()
                                 ->getSslShopUrl() . 'index.php?cl=thankyou&paymentid=' . $paymentId);
     }
@@ -145,9 +140,6 @@ class OrderController extends OrderController_parent
     {
         // additional user check
         $oUser = $this->getUser();
-        if (!$oUser) {
-            //return 'user';
-        }
         $returnValue = true;
         $oBasket = $this->getSession()->getBasket();
         if ($oBasket->getProductsCount()) {
@@ -155,8 +147,6 @@ class OrderController extends OrderController_parent
             // finalizing ordering process (validating, storing order into DB, executing payment, setting status ...)
             $iSuccess = $oOrder->finalizeOrder($oBasket, $oUser);
             // performing special actions after user finishes order (assignment to special user groups)
-            //$oUser->onOrderExecute($oBasket, $iSuccess);
-
             if ($oOrder) {
                 $returnValue = $this->oNetsOrder->createNetsTransaction($oOrder);
             }
