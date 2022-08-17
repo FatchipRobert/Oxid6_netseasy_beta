@@ -190,7 +190,12 @@ class OrderOverviewController extends OrderOverviewController_parent
         }
         $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $this->oCommonHelper->getPaymentId($oxid), 'GET');
         $response = json_decode($api_return, true);
-
+        $A2A = $response['payment']['paymentDetails']['paymentType'] == 'A2A' ? TRUE : FALSE;
+        if ($A2A) {
+            if (isset($response['payment']['summary']['chargedAmount'])) {
+                $response['payment']['summary']['reservedAmount'] = $response['payment']['summary']['chargedAmount'];
+            }
+        }
         if (!empty($response['payment']['charges'])) {
             $chargedItems = $this->oOrderOverviewController->getChargedItems($response);
         }

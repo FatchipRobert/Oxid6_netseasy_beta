@@ -47,7 +47,7 @@
 		};
                 console.log(checkoutOptions);
 		var checkout = new Dibs.Checkout(checkoutOptions);
-		checkout.on('payment-completed', function(response) {
+		checkout.on('payment-completed', function(response) {                         
 			$("#orderConfirmAgbBottom").submit();
 		});
 	</script>

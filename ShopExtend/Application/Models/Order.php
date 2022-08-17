@@ -9,6 +9,8 @@ use Es\NetsEasy\ShopExtend\Application\Models\BasketItems;
 use Es\NetsEasy\ShopExtend\Application\Models\Payment;
 use Es\NetsEasy\ShopExtend\Application\Models\Address;
 use OxidEsales\EshopCommunity\Core\Registry;
+use OxidEsales\EshopCommunity\Core\Request;
+
 /**
  * Nets oxOrder class
  * @mixin Es\NetsEasy\ShopExtend\Application\Model\Order
@@ -32,7 +34,6 @@ class Order
     protected $oxUtils;
     protected $oxOrder;
     protected $netsLog;
-    
     protected $oxBasketItems;
     protected $oxPayment;
     protected $oxAddress;
@@ -63,7 +64,7 @@ class Order
         } else {
             $this->oxOrder = $oxOrder;
         }
-        
+
         if (!$oxBasketItems) {
             $this->oxBasketItems = \oxNew(BasketItems::class);
         } else {
@@ -178,7 +179,6 @@ class Order
         Registry::getSession()->setVariable('nets_err_msg', $error_message);
     }
 
-   
     /**
      * Function to finalizing ordering process (validating, storing order into DB, executing payment, setting status 
      * @return null
@@ -199,8 +199,12 @@ class Order
         }
         // finalizing ordering process (validating, storing order into DB, executing payment, setting status ...)
         $oBasket = Registry::getSession()->getBasket();
-        //$oOrder = \oxNew(\OxidEsales\Eshop\Application\Model\Order::class);
+
+        $sDeliveryAddress = $oUser->getEncodedDeliveryAddress();
+        $_POST['sDeliveryAddressMD5'] = $sDeliveryAddress;
+        //Request::setRequestParameter('sDeliveryAddressMD5',$sDeliveryAddress);
         $iSuccess = $this->oxOrder->finalizeOrder($oBasket, $oUser);
+
         $paymentId = Registry::getSession()->getVariable('payment_id');
         $orderNr = null;
         if (isset($this->oxOrder->oxorder__oxordernr->value)) {
@@ -228,21 +232,21 @@ class Order
         $this->netsLog->log($this->_NetsLog, " payment api status NetsOrder, response checkout url", $response['payment']['checkout']['url']);
         $this->netsLog->log($this->_NetsLog, " refupdate NetsOrder, response", $refUpdate);
         $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getUpdateRefUrl($paymentId), 'PUT', json_encode($refUpdate));
-        if (Registry::getConfig()->getConfigParam('nets_autocapture')) {
-            $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
-            $api_ret = json_decode($chargeResponse, true);
-            if (isset($api_ret)) {
-                foreach ($api_ret['payment']['charges'] as $ky => $val) {
-                    foreach ($val['orderItems'] as $key => $value) {
-                        if (isset($val['chargeId'])) {
-                            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-                            $charge_query = "INSERT INTO `oxnets` (`transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $paymentId . "', '" . $val['chargeId'] . "', '" . $value['reference'] . "', '" . $value['quantity'] . "', '" . $value['quantity'] . "')";
-                            $oDB->Execute($charge_query);
-                        }
+        //if (Registry::getConfig()->getConfigParam('nets_autocapture')) {
+        $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
+        $api_ret = json_decode($chargeResponse, true);
+        if (isset($api_ret)) {
+            foreach ($api_ret['payment']['charges'] as $ky => $val) {
+                foreach ($val['orderItems'] as $key => $value) {
+                    if (isset($val['chargeId'])) {
+                        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
+                        $charge_query = "INSERT INTO `oxnets` (`transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $paymentId . "', '" . $val['chargeId'] . "', '" . $value['reference'] . "', '" . $value['quantity'] . "', '" . $value['quantity'] . "')";
+                        $oDB->Execute($charge_query);
                     }
                 }
             }
         }
+        //}
         return true;
     }
 
@@ -268,6 +272,7 @@ class Order
         }
         return $oOrdernr;
     }
+
     /**
      * Function to get current order from basket
      * @return array
@@ -278,6 +283,7 @@ class Order
         $oBasket = $mySession->getBasket();
         return $oBasket->getOrderId();
     }
+
     /**
      * Function to check if it embedded checkout
      * @return bool

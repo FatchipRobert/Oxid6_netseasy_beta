@@ -147,7 +147,7 @@ class Payment
         $delivery_address = $daten['delivery_address'];
         $data['checkout']['integrationType'] = $this->integrationType;
         if (Registry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
-            $data['checkout']['url'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=thankyou');
+            $data['checkout']['url'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=order&fnc=execute&paymentid=' . $paymentId);
         } else {
             $data['checkout']['returnUrl'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=order&fnc=returnhosted&paymentid=' . $paymentId);
             $data['checkout']['cancelUrl'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=order');

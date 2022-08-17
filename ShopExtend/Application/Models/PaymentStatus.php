@@ -117,6 +117,11 @@ class PaymentStatus
         $partialr = $reserved - $refunded;
         $chargeid = isset($response['payment']['charges'][0]['chargeId']) ? $response['payment']['charges'][0]['chargeId'] : '';
         $chargedate = isset($response['payment']['charges'][0]['created']) ? $response['payment']['charges'][0]['created'] : date('Y-m-d');
+        $A2A = $response['payment']['paymentDetails']['paymentType'] == 'A2A' ? TRUE : FALSE;
+        if($A2A){
+            $reserved = isset($response['payment']['summary']['chargedAmount']) ? $response['payment']['summary']['chargedAmount'] : '0';
+            // $refunded = isset($response['payment']['refunds'][0]['amount']) ? $response['payment']['refunds'][0]['amount'] : '0';
+        }
         if ($reserved) {
             if ($cancelled) {
                 $langStatus = "cancel";
