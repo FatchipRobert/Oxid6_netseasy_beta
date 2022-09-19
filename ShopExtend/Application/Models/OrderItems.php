@@ -12,8 +12,13 @@ class OrderItems
 
     protected $oCommonHelper;
     protected $oOrderItems;
-
-    public function __construct($oOrderItems = null, $commonHelper = null)
+    /**
+     * Constructor
+     * @param  object $oOrderItems The OrderItems model injected object
+     * @param  object $commonHelper The service file injected as object
+     * @return Null
+     */
+    public function __construct($oOrderItems = null, CommonHelper $commonHelper)
     {
 
         if (!$oOrderItems) {
@@ -22,16 +27,13 @@ class OrderItems
             $this->oOrderItems = $oOrderItems;
         }
         // works only if StaticHelper is not autoloaded yet!
-        if (!$commonHelper) {
-            $this->oCommonHelper = \oxNew(CommonHelper::class);
-        } else {
-            $this->oCommonHelper = $commonHelper;
-        }
+        $this->oCommonHelper = $commonHelper;
     }
 
     /*
      * Function to get order items to pass capture, refund, cancel api
-     * @param $oxorder oxid order id alphanumeric
+     * @param object $oxorder The oxid order id alphanumeric
+     * @param Boolean $blExcludeCanceled The oxid exclude canceled value
      * @return array order items and amount
      */
 
@@ -91,6 +93,7 @@ class OrderItems
 
     /*
      * Function to get product item listing
+     * @param array $listitem The order items array
      * @return array
      */
 
@@ -112,6 +115,7 @@ class OrderItems
 
     /*
      * Function to Get card item
+     * @param array $item The order items array
      * @return array
      */
 
@@ -133,6 +137,7 @@ class OrderItems
 
     /*
      * Function to Get Gift wrapping item
+     * @param array $item The order items array
      * @return array
      */
 
@@ -154,6 +159,7 @@ class OrderItems
 
     /*
      * Function to get additional payment cost associated with order item if any
+     * @param array $item The order items array
      * @return array
      */
 
@@ -175,6 +181,7 @@ class OrderItems
 
     /*
      * Function to prepare amount
+     * @param int $amount The order item amount
      * @return int
      */
 

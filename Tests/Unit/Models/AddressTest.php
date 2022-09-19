@@ -7,6 +7,8 @@ use OxidEsales\Eshop\Application\Model\Order;
 use OxidEsales\Eshop\Application\Model\User;
 use \Es\NetsEasy\ShopExtend\Application\Models\Address as NetsAddress;
 use OxidEsales\Eshop\Core\Field;
+use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
+use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
 
 class AddressTest extends \Codeception\Test\Unit
 {
@@ -29,15 +31,11 @@ class AddressTest extends \Codeception\Test\Unit
     public function testGetDeliveryAddress()
     {
         $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['Load'])->getMock();
-
-        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Core\DatabaseProvider::class);
-        $mockBuilder->setMethods(['getDb', 'getOne']);
-        $mockDB = $mockBuilder->getMock();
         $oMockUser = $this->getMockBuilder(User::class)->setMethods(['Load'])->getMock();
         $sUserID = $this->getUserId();
         $oUser = \oxNew("oxuser", "core");
         $oUser->Load($sUserID);
-        $result = $this->addressObject->getDeliveryAddress($oMockOrder, $mockDB, $oUser);
+        $result = $this->addressObject->getDeliveryAddress($oMockOrder, null, $oUser);
         $this->assertObjectHasAttribute('firstname', $result);
 
         $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['Load', 'getDelAddressInfo'])->getMock();
@@ -84,9 +82,12 @@ class AddressTest extends \Codeception\Test\Unit
      */
     public function getUserId()
     {
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-        $sSQL_select = "SELECT oxid FROM oxuser LIMIT 1";
-        return $oDB->getOne($sSQL_select);
+        $queryBuilder = ContainerFactory::getInstance()
+                        ->getContainer()
+                        ->get(QueryBuilderFactoryInterface::class)->create();
+        return $queryBuilder
+                        ->select('oxid')
+                        ->from('oxuser')->execute()->fetchOne();
     }
 
 }

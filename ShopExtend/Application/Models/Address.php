@@ -3,6 +3,9 @@
 namespace Es\NetsEasy\ShopExtend\Application\Models;
 
 use OxidEsales\Eshop\Core\Registry;
+use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
+use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
+use Es\NetsEasy\Core\CommonHelper;
 
 /**
  * Nets address class
@@ -13,11 +16,17 @@ class Address
 
     /**
      * Function to get dDelivery address array
+     * @param  object $oOrder The Order model object
+     * @param  object $oDB The database object
+     * @param  object $oUser The user model object
      * @return array
      */
     public function getDeliveryAddress($oOrder, $oDB, $oUser)
     {
         $oDelAd = $oOrder->getDelAddressInfo();
+        $queryBuilder = ContainerFactory::getInstance()
+                        ->getContainer()
+                        ->get(QueryBuilderFactoryInterface::class)->create();
         if ($oDelAd) {
             $delivery_address = new \stdClass();
             $delivery_address->firstname = $oDelAd->oxaddress__oxfname->value;
@@ -27,9 +36,15 @@ class Address
             $delivery_address->zip = $oDelAd->oxaddress__oxzip->value;
             $delivery_address->city = $oDelAd->oxaddress__oxcity->value;
             $sDelCountry = $oDelAd->oxaddress__oxcountryid->value;
-            $delivery_address->country = $oDB->getOne("SELECT oxisoalpha3 FROM oxcountry WHERE oxid = ?", [
-                $sDelCountry
+            $queryBuilder
+                    ->select('oxisoalpha3')
+                    ->from('oxcountry')
+                    ->where('oxid = :oxorder_id')
+                    ->setParameters([
+                        'oxorder_id' => $sDelCountry,
             ]);
+            $delivery_address->country = $queryBuilder->execute()->fetchOne();
+
             $delivery_address->company = $oDelAd->oxaddress__oxcompany->value;
             return $delivery_address;
         } else {
@@ -40,9 +55,14 @@ class Address
             $delivery_address->housenumber = $oUser->oxuser__oxstreetnr->value;
             $delivery_address->zip = $oUser->oxuser__oxzip->value;
             $delivery_address->city = $oUser->oxuser__oxcity->value;
-            $delivery_address->country = $oDB->getOne("SELECT oxisoalpha3 FROM oxcountry WHERE oxid = ?", [
-                $oUser->oxuser__oxcountryid->value
+            $queryBuilder
+                    ->select('oxisoalpha3')
+                    ->from('oxcountry')
+                    ->where('oxid = :oxorder_id')
+                    ->setParameters([
+                        'oxorder_id' => $oUser->oxuser__oxcountryid->value,
             ]);
+            $delivery_address->country = $queryBuilder->execute()->fetchOne();
             $delivery_address->company = $oUser->oxuser__oxcompany->value;
             return $delivery_address;
         }
@@ -50,6 +70,9 @@ class Address
 
     /**
      * Function to set address
+     * @param  object $oUser The user model object
+     * @param  object $sTranslation The translation object
+     * @param  object $oBasket The basket model object
      * @return array
      */
     public function setAddress($oUser, $sTranslation, $oBasket)
@@ -65,7 +88,8 @@ class Address
         } catch (oxLanguageException $oEx) {
             // is thrown in debug mode and has to be caught here, as smarty hangs otherwise!
         }
-        $daten['checkout_type'] = Registry::getConfig()->getConfigParam('nets_checkout_mode');
+        $oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
+        $daten['checkout_type'] = $oxConfig->getConfigParam('nets_checkout_mode');
         $lang_abbr = $oLang->getLanguageAbbr($iLang);
         if (isset($lang_abbr) && $lang_abbr === 'en') {
             $daten['language'] = 'en_US';

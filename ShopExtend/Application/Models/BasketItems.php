@@ -11,6 +11,11 @@ class BasketItems
 
     protected $oOrder;
 
+    /**
+     * Constructor
+     * @param  object $oOrder The Order model injected object
+     * @return Null
+     */
     public function __construct($oOrder = null)
     {
         if (!$oOrder) {
@@ -22,6 +27,7 @@ class BasketItems
 
     /**
      * Function to get item list array
+     * @param  object $oBasket The basket model object
      * @return null
      */
     public function getItemList($oBasket)
@@ -79,6 +85,7 @@ class BasketItems
 
     /**
      * Function to get all type of discounts altogether and pass it to nets api
+     * @param  object $basket The basket model object
      * @return float
      */
     public function getDiscountSum($basket)
@@ -103,6 +110,8 @@ class BasketItems
 
     /**
      * Function to get discount item array
+     * @param  int $wrapCost The wrap cost number
+     * @param  array $greetCardAmt The greet cart amount
      * @return null
      */
     public function getDiscountItem($wrapCost, $greetCardAmt)
@@ -136,6 +145,7 @@ class BasketItems
 
     /**
      * Function to get product item
+     * @param  array $item The items array
      * @return array
      */
     public function getProductItem($item)

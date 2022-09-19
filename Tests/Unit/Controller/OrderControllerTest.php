@@ -9,6 +9,7 @@ use OxidEsales\Eshop\Core\Field;
 use OxidEsales\Eshop\Core\UtilsObject;
 use OxidEsales\Eshop\Application\Controller\ThankyouController;
 use OxidEsales\EshopCommunity\Core\Registry;
+use Es\NetsEasy\Core\CommonHelper;
 
 class OrderControllerTest extends \Codeception\Test\Unit
 {
@@ -17,6 +18,8 @@ class OrderControllerTest extends \Codeception\Test\Unit
      * @var \UnitTester
      */
     protected $orderObject;
+    protected $oxSession;
+    protected $oxConfig;
 
     protected function setUp(): void
     {
@@ -27,6 +30,8 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $payment = $this->getMockBuilder(Payment::class)->setMethods(['load'])->getMock();
         $payment->expects($this->any())->method('load')->willReturn(true);
         $payment->oxpayments__oxactive = new Field(true);
+        $this->oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
+        $this->oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
     }
 
     /**
@@ -35,28 +40,25 @@ class OrderControllerTest extends \Codeception\Test\Unit
     public function testExecute()
     {
         Registry::getSession()->setVariable('payment_id', '0230000062a996e863308f63c7333a01');
-        $order = $this->getMockBuilder(NetsOrder::class)->setMethods(['isEmbedded', 'processOrder'])->getMock();
+        Registry::getSession()->setVariable('paymentid', 'nets_easy');
+        $order = $this->getMockBuilder(NetsOrder::class)
+                ->disableOriginalConstructor()->setMethods(['isEmbedded', 'processOrder'])
+                ->getMock();
+
         $order->expects($this->any())->method('processOrder')->willReturn(1);
         $order->expects($this->any())->method('isEmbedded')->willReturn(1);
 
         $user = $this->getMockBuilder(User::class)->setMethods(['getType', 'onOrderExecute'])->getMock();
         $user->expects($this->any())->method('getType')->willReturn(0);
-
-        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
-        $mockBuilder->setMethods(['getProductsCount']);
-        $basket = $mockBuilder->getMock();
-        $basket->expects($this->any())->method("getProductsCount")->will($this->returnValue(true));
+        $basket = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class)->setMethods(['getProductsCount'])->getMock();
+        $basket->expects($this->any())->method('getProductsCount')->willReturn(true);
         Registry::getSession()->setBasket($basket);
-
         $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);
         $utils = $mockBuilder->getMock();
-
         $utils->expects($this->any())->method('redirect')->willReturn('test');
 
-        $sGetChallenge = Registry::getSession()->getSessionChallengeToken();
-
-        $oOrderOverview = new OrderController($order, $mockBuilder, $utils);
+        $oOrderOverview = new OrderController($order, null, $utils, $basket);
         $result = $oOrderOverview->execute();
         $this->assertEquals('test', $result);
 
@@ -83,10 +85,10 @@ class OrderControllerTest extends \Codeception\Test\Unit
      */
     public function testReturnhosted()
     {
-        Registry::getSession()->setVariable('payment_id', '0230000062a996e863308f63c7333a01');
-        Registry::getConfig()->setConfigParam('nets_autocapture', 1);
+        $this->oxSession->setVariable('payment_id', '0230000062a996e863308f63c7333a01');
+        $this->oxConfig->setConfigParam('nets_autocapture', 1);
 
-        $oOrder = $this->getMockBuilder(NetsOrder::class)->setMethods(['savePaymentDetails'])->getMock();
+        $oOrder = $this->getMockBuilder(NetsOrder::class)->disableOriginalConstructor()->setMethods(['savePaymentDetails'])->getMock();
         $oOrder->expects($this->any())->method('savePaymentDetails')->willReturn(1);
 
         $mockBuilder = $this->getMockBuilder(Registry::class);
@@ -109,9 +111,9 @@ class OrderControllerTest extends \Codeception\Test\Unit
 
     public function testGetCheckoutJs()
     {
-        Registry::getConfig()->setConfigParam('nets_blMode', 1);
+        $this->oxConfig->setConfigParam('nets_blMode', 1);
         $getCheckoutJs = $this->orderObject->getCheckoutJs();
-        Registry::getConfig()->setConfigParam('nets_blMode', 0);
+        $this->oxConfig->setConfigParam('nets_blMode', 0);
         $getCheckoutJs = $this->orderObject->getCheckoutJs();
         $this->assertNotNull($getCheckoutJs);
     }
@@ -141,7 +143,7 @@ class OrderControllerTest extends \Codeception\Test\Unit
      */
     public function testGetErrorMsg()
     {
-        Registry::getSession()->setVariable('nets_err_msg', 'test');
+        $this->oxSession->setVariable('nets_err_msg', 'test');
         $errorMsg = $this->orderObject->getErrorMsg();
         $this->assertEquals('test', $errorMsg);
     }
@@ -161,7 +163,9 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $basket = $mockBuilder->getMock();
         $basket->expects($this->any())->method("getPrice")->will($this->returnValue($price));
         Registry::getSession()->setBasket($basket);
-        $basketAmount = $this->orderObject->getBasketAmount();
+
+        $oOrderOverview = new OrderController(null, null, null, $basket);
+        $basketAmount = $oOrderOverview->getBasketAmount();
         $this->assertEquals(10000, $basketAmount);
     }
 

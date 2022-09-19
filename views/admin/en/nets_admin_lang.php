@@ -9,6 +9,7 @@
 $sLangName = "English";
 $aLang = [
     'charset' => 'ISO-8859-15',
+    'SHOP_MODULE_nets_merchant_id' => 'Merchant ID',
     'SHOP_MODULE_nets_blMode' => 'Mode',
     'SHOP_MODULE_nets_blMode_0' => 'Test',
     'SHOP_MODULE_nets_blMode_1' => 'Live',

@@ -2,11 +2,13 @@
 
 namespace Es\NetsEasy\ShopExtend\Application\Models;
 
-use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Api\NetsPaymentTypes;
 use Es\NetsEasy\Core\CommonHelper;
 use Es\NetsEasy\ShopExtend\Application\Models\OrderItems;
 use OxidEsales\EshopCommunity\Core\Request;
+use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
+use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
+use Es\NetsEasy\Core\DebugHandler;
 
 /**
  * Class defines Nets payment operations in order view
@@ -16,28 +18,33 @@ class PaymentOperations
 
     protected $oCommonHelper;
     protected $paymentOPObject;
-    protected $_NetsLog;
-    protected $netsLog;
+    protected $oDebugHandler;
     protected $oOrderItems;
+    protected $queryBuilder;
 
-    public function __construct($paymentOPObject = null, $commonHelper = null, $oOrderItems = null)
+    /**
+     * Constructor
+     * @param object $paymentOPObject The OXID Payment model
+     * @param object $commonHelper The service file injected as object
+     * @param array $oOrderItems The OXID Order items array
+     * @return Null
+     */
+    public function __construct($paymentOPObject = null, CommonHelper $commonHelper, $oOrderItems = null)
     {
-        $this->_NetsLog = true;
-        $this->netsLog = \oxNew(NetsLog::class);
-
+        $this->oDebugHandler = \oxNew(DebugHandler::class);
+        $this->queryBuilder = ContainerFactory::getInstance()
+                ->getContainer()
+                ->get(QueryBuilderFactoryInterface::class);
         if (!$paymentOPObject) {
             $this->paymentOPObject = $this;
         } else {
             $this->paymentOPObject = $paymentOPObject;
         }
         // works only if StaticHelper is not autoloaded yet!
-        if (!$commonHelper) {
-            $this->oCommonHelper = \oxNew(CommonHelper::class);
-        } else {
-            $this->oCommonHelper = $commonHelper;
-        }
+        $this->oCommonHelper = $commonHelper;
+
         if (!$oOrderItems) {
-            $this->oOrderItems = \oxNew(OrderItems::class);
+            $this->oOrderItems = \oxNew(OrderItems::class, null, $this->oCommonHelper);
         } else {
             $this->oOrderItems = $oOrderItems;
         }
@@ -76,26 +83,56 @@ class PaymentOperations
                 'orderItems' => $data['items']
             ];
         }
-        $this->netsLog->log($this->_NetsLog, "Nets_Order_Overview" . json_encode($body));
+        $this->oDebugHandler->log("Nets_Order_Overview" . json_encode($body));
         $api_return = $this->oCommonHelper->getCurlResponse($chargeUrl, 'POST', json_encode($body));
         $response = json_decode($api_return, true);
 
-        $this->netsLog->log($this->_NetsLog, "Nets_Order_Overview" . $response);
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
+        $this->oDebugHandler->log("Nets_Order_Overview" . $response);
         $dt = date("Y-m-d H:i:s");
-        $oDB->Execute("UPDATE oxorder SET oxpaid = '{$dt}'
-		WHERE oxid = '{$oxorder}'");
+        $queryBuilder = $this->queryBuilder->create();
+        $queryBuilder
+                ->update('oxorder', 'o')
+                ->set('o.oxpaid', '?')
+                ->where('o.oxid = ?')
+                ->setParameter(0, "'{$dt}'")
+                ->setParameter(1, "'{$oxorder}'")->execute();
         // save charge details in db for partial refund
         if (isset($ref) && isset($response['chargeId'])) {
-            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-            $charge_query = "INSERT INTO `oxnets` (`transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $payment_id . "', '" . $response['chargeId'] . "', '" . $ref . "', '" . $chargeQty . "', '" . $chargeQty . "')";
-            $oDB->Execute($charge_query);
+            $queryBuilder = $this->queryBuilder->create();
+            $queryBuilder->insert('oxnets')
+                    ->values(
+                            array(
+                                'transaction_id' => '?',
+                                'charge_id' => '?',
+                                'product_ref' => '?',
+                                'charge_qty' => '?',
+                                'charge_left_qty' => '?'
+                            )
+                    )
+                    ->setParameter(0, $paymentId)
+                    ->setParameter(1, $response['chargeId'])
+                    ->setParameter(2, $ref)
+                    ->setParameter(3, $chargeQty)
+                    ->setParameter(4, $chargeQty)->execute();
         } else {
-            $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
             if (isset($response['chargeId'])) {
                 foreach ($data['items'] as $key => $value) {
-                    $charge_query = "INSERT INTO `oxnets` (`transaction_id`,`charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $payment_id . "', '" . $response['chargeId'] . "', '" . $value['reference'] . "', '" . $value['quantity'] . "', '" . $value['quantity'] . "')";
-                    $oDB->Execute($charge_query);
+                    $queryBuilder = $this->queryBuilder->create();
+                    $queryBuilder->insert('oxnets')
+                            ->values(
+                                    array(
+                                        'transaction_id' => '?',
+                                        'charge_id' => '?',
+                                        'product_ref' => '?',
+                                        'charge_qty' => '?',
+                                        'charge_left_qty' => '?'
+                                    )
+                            )
+                            ->setParameter(0, $payment_id)
+                            ->setParameter(1, $response['chargeId'])
+                            ->setParameter(2, $value['reference'])
+                            ->setParameter(3, $value['quantity'])
+                            ->setParameter(4, $value['quantity'])->execute();
                 }
             }
         }
@@ -104,7 +141,9 @@ class PaymentOperations
 
     /*
      * Function to get value item list for charge
-     * return int
+     * @param array $value The OXID Order item
+     * @param int The OXID Order quantity to be charged
+     * return array
      */
 
     public function getValueItem($value, $chargeQty)
@@ -126,6 +165,7 @@ class PaymentOperations
     /*
      * Function to capture nets transaction - calls Refund API
      * redirects to admin overview listing page
+     * @return null
      */
 
     public function getOrderRefund()
@@ -154,18 +194,27 @@ class PaymentOperations
                 ];
                 $refundUrl = $this->oCommonHelper->getRefundPaymentUrl($val['chargeId']);
                 $this->oCommonHelper->getCurlResponse($refundUrl, 'POST', json_encode($body));
-                // table update forcharge refund quantity
-                $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
-                $oDb->execute("UPDATE oxnets SET charge_left_qty = 0 WHERE transaction_id = '" . $payment_id . "' AND charge_id = '" . $val['chargeId'] . "'");
+                $queryBuilder = $this->queryBuilder->create();
+                $queryBuilder
+                        ->update('oxnets', 'o')
+                        ->set('o.charge_left_qty', '?')
+                        ->where('o.transaction_id = ?')
+                        ->andWhere('o.charge_id = ?')
+                        ->setParameter(0, 0)->setParameter(1, $payment_id)->setParameter(2, $val['chargeId'])->execute();
 
-                $this->netsLog->log($this->_NetsLog, "Nets_Order_Overview getorder refund" . json_encode($body));
+                $this->oDebugHandler->log("Nets_Order_Overview getorder refund" . json_encode($body));
             } else if (in_array($ref, array_column($val['orderItems'], 'reference'))) {
-                $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(\OxidEsales\Eshop\Core\DatabaseProvider::FETCH_MODE_ASSOC);
-                $charge_query = $oDb->getAll("SELECT `transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty` FROM oxnets WHERE transaction_id = ? AND charge_id = ? AND product_ref = ? AND charge_left_qty !=0", [
-                    $payment_id,
-                    $val['chargeId'],
-                    $ref
-                ]);
+                $queryBuilder = $this->queryBuilder->create();
+                $queryBuilder
+                        ->select('transaction_id', 'charge_id', 'product_ref', 'charge_qty', 'charge_left_qty')
+                        ->from('oxnets')
+                        ->where('transaction_id = ?')
+                        ->andWhere('charge_id = ?')
+                        ->andWhere('product_ref = ?')
+                        ->andWhere('charge_left_qty != ?')
+                        ->setParameter(0, $payment_id)->setParameter(1, $val['chargeId'])->setParameter(2, $ref)->setParameter(3, 0);
+                $charge_query = $queryBuilder->execute()->fetchAll();
+
                 if (count($charge_query) > 0) {
                     $table_charge_left_qty = $refundEachQtyArr[$val['chargeId']] = $charge_query[0]['charge_left_qty'];
                 }
@@ -181,14 +230,19 @@ class PaymentOperations
 
                         $refundUrl = $this->oCommonHelper->getRefundPaymentUrl($key);
                         $this->oCommonHelper->getCurlResponse($refundUrl, 'POST', json_encode($body));
-                        $this->netsLog->log($this->_NetsLog, "Nets_Order_Overview getorder refund" . json_encode($body));
+                        $this->oDebugHandler->log("Nets_Order_Overview getorder refund" . json_encode($body));
 
-                        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(\OxidEsales\Eshop\Core\DatabaseProvider::FETCH_MODE_ASSOC);
-                        $singlecharge_query = $oDb->getAll("SELECT  `charge_left_qty` FROM oxnets WHERE transaction_id = ? AND charge_id = ? AND product_ref = ? AND charge_left_qty !=0", [
-                            $payment_id,
-                            $val['chargeId'],
-                            $ref
-                        ]);
+                        $queryBuilder = $this->queryBuilder->create();
+                        $queryBuilder
+                                ->select('charge_left_qty')
+                                ->from('oxnets')
+                                ->where('transaction_id = ?')
+                                ->andWhere('charge_id = ?')
+                                ->andWhere('product_ref = ?')
+                                ->andWhere('charge_left_qty != ?')
+                                ->setParameter(0, $payment_id)->setParameter(1, $val['chargeId'])->setParameter(2, $ref)->setParameter(3, 0);
+                        $charge_query = $queryBuilder->execute()->fetchAll();
+
                         if (count($singlecharge_query) > 0) {
                             $charge_left_qty = $singlecharge_query[0]['charge_left_qty'];
                         }
@@ -196,8 +250,14 @@ class PaymentOperations
                         if ($charge_left_qty < 0) {
                             $charge_left_qty = - $charge_left_qty;
                         }
-                        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
-                        $oDb->execute("UPDATE oxnets SET charge_left_qty = $charge_left_qty WHERE transaction_id = '" . $payment_id . "' AND charge_id = '" . $key . "' AND product_ref = '" . $ref . "'");
+                        $queryBuilder = $this->queryBuilder->create();
+                        $queryBuilder
+                                ->update('oxnets', 'o')
+                                ->set('o.charge_left_qty', '?')
+                                ->where('o.transaction_id = ?')
+                                ->andWhere('o.charge_id = ?')
+                                ->andWhere('o.product_ref = ?')
+                                ->setParameter(0, $charge_left_qty)->setParameter(1, $payment_id)->setParameter(2, $key)->setParameter(3, $ref)->execute();
                     }
                     break;
                 }
@@ -207,8 +267,8 @@ class PaymentOperations
 
     /*
      * Function to fetch charge id from databse table oxnets
-     * @param $oxorder_id
-     * @return nets charge id
+     * @param string $oxorder_id The order ID
+     * @return string charge id
      */
 
     public function getChargeId($oxoder_id)
@@ -236,6 +296,9 @@ class PaymentOperations
 
     /*
      * Function to Get order Items to refund and pass them to refund api
+     * @param string $ref The order reference
+     * @param int $refundQty The order refund quantity
+     * @param array $data The order items array
      * @return array
      */
 

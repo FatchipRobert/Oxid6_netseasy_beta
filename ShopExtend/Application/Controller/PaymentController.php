@@ -3,6 +3,7 @@
 namespace Es\NetsEasy\ShopExtend\Application\Controller;
 
 use Es\NetsEasy\Api\NetsPaymentTypes;
+use Es\NetsEasy\ShopExtend\Application\Models\Payment as NetsPayment;
 
 /**
  * Class defines description of nets payment
@@ -19,7 +20,8 @@ class PaymentController extends PaymentController_parent
      */
     public function init()
     {
-        $this->getSession()->deleteVariable('nets_err_msg');
+        $oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
+        $oxSession->deleteVariable('nets_err_msg');
         $this->getNetsPaymentTypes();
         $this->_sThisTemplate = parent::render();
         parent::init();
@@ -29,16 +31,16 @@ class PaymentController extends PaymentController_parent
      * Function to get Nets Payment Types from db
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
+     * @return Null
      */
     public function getNetsPaymentTypes()
     {
         $this->payment_types_active = [];
-        $netsPaymentTypesObj = \oxNew(NetsPaymentTypes::class);
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-        $sSql = "SELECT OXID FROM oxpayments WHERE oxactive = 1";
-        $active_payment_ids = $oDB->getAll($sSql);
+        $netsPaymentObj = \oxNew(NetsPayment::class, \oxNew(\Es\NetsEasy\Core\CommonHelper::class));
+        $active_payment_ids = $netsPaymentObj->getActivePayments();
         if (!empty($active_payment_ids)) {
             $payment_types = [];
+            $netsPaymentTypesObj = \oxNew(NetsPaymentTypes::class);
             foreach ($active_payment_ids as $payment_id) {
                 $payment_type = $netsPaymentTypesObj->getNetsPaymentType($payment_id[0]);
                 if (isset($payment_type) && $payment_type) {
@@ -55,7 +57,8 @@ class PaymentController extends PaymentController_parent
      */
     public function getPaymentTextConfig()
     {
-        return $this->getConfig()->getConfigParam('nets_payment_text');
+        $oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
+        return $oxConfig->getConfigParam('nets_payment_text');
     }
 
     /**
@@ -64,7 +67,8 @@ class PaymentController extends PaymentController_parent
      */
     public function getPaymentUrlConfig()
     {
-        return $this->getConfig()->getConfigParam('nets_payment_url');
+        $oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
+        return $oxConfig->getConfigParam('nets_payment_url');
     }
 
 }

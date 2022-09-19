@@ -19,7 +19,7 @@ class PaymentStatusTest extends \Codeception\Test\Unit
     {
         parent::setUp();
         include_once dirname(__FILE__) . "/../../../../../../bootstrap.php";
-        $this->oPaymentStatus = \oxNew(PaymentStatus::class);
+        $this->oPaymentStatus = \oxNew(PaymentStatus::class,null,\oxNew(\Es\NetsEasy\Core\CommonHelper::class));
         $this->oOrderOverviewControllerTest = \oxNew(OrderOverviewControllerTest::class);
     }
 
@@ -28,7 +28,7 @@ class PaymentStatusTest extends \Codeception\Test\Unit
      */
     public function testGetEasyStatus()
     {
-        $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->setMethods(['getOrderItems', 'getPaymentStatus'])->getMock();
+        $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->disableOriginalConstructor()->setMethods(['getOrderItems', 'getPaymentStatus'])->getMock();
         $oPaymentStatus->expects($this->any())->method('getOrderItems')->willReturn([
             'totalAmt' => 100,
             'items' => 'items'
@@ -38,13 +38,13 @@ class PaymentStatusTest extends \Codeception\Test\Unit
         $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getVoidPaymentUrl', 'getPaymentId', 'getApiUrl'])->getMock();
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn("{'chargeId':'dummyChargeId'}");
         $oCommonHelper->expects($this->any())->method('getVoidPaymentUrl')->willReturn('url');
-        $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(true);
+        $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(100);
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
 
         $paymentStatusObj = new PaymentStatus($oPaymentStatus, $oCommonHelper);
         $result = $paymentStatusObj->getEasyStatus(100);
         $this->assertNotEmpty($result);
-
+        
         $oCommonHelper = $this->getMockBuilder(CommonHelper::class)->setMethods(['getCurlResponse', 'getVoidPaymentUrl', 'getPaymentId', 'getApiUrl'])->getMock();
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn("{'chargeId':'dummyChargeId'}");
         $oCommonHelper->expects($this->any())->method('getVoidPaymentUrl')->willReturn('url');
@@ -54,6 +54,8 @@ class PaymentStatusTest extends \Codeception\Test\Unit
         $paymentStatusObj = new PaymentStatus($oPaymentStatus, $oCommonHelper);
         $result = $paymentStatusObj->getEasyStatus(100);
         $this->assertNotEmpty($result);
+
+        
     }
 
     /**

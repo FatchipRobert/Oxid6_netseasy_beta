@@ -14,12 +14,14 @@ class OrderItemsTest extends \Codeception\Test\Unit
      */
     protected $oOrderItems;
     protected $oOrderOverviewControllerTest;
+    protected $oCommonHelper;
 
     protected function setUp(): void
     {
         parent::setUp();
         include_once dirname(__FILE__) . "/../../../../../../bootstrap.php";
-        $this->oOrderItems = \oxNew(OrderItems::class);
+        $this->oCommonHelper = \oxNew(\Es\NetsEasy\Core\CommonHelper::class);
+        $this->oOrderItems = \oxNew(OrderItems::class, null, $this->oCommonHelper);
         $this->oOrderOverviewControllerTest = \oxNew(OrderOverviewControllerTest::class);
     }
 
@@ -31,7 +33,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
     {
         $response = $this->oOrderOverviewControllerTest->getNetsPaymentResponce();
         $response = ['response' => json_decode($response, true)];
-        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getItemList'])->getMock();
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getItemList'])->getMock();
         $oOrderItems->expects($this->any())->method('getItemList')->willReturn(['items' => [0 => [
                     'reference' => '1205',
                     'name' => 'ABC',
@@ -44,7 +46,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
                     'netTotalAmount' => 10000,
                     'oxbprice' => 10000
         ]]]);
-        $orderItemsObj = new OrderItems($oOrderItems, null);
+        $orderItemsObj = new OrderItems($oOrderItems, $this->oCommonHelper);
         $result = $orderItemsObj->getOrderItems(100);
         $this->assertNotEmpty($result);
     }
@@ -55,7 +57,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
 
     public function testGetItemList()
     {
-        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getOrderItems'])->getMock();
         $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
@@ -78,7 +80,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
         $oOrderItems->oxorderarticles__oxnetprice = new Field(true);
         $oOrderItems->oxorderarticles__oxbprice = new Field(true);
 
-        $orderItemsObj = new OrderItems($oOrderItems, null);
+        $orderItemsObj = new OrderItems($oOrderItems, $this->oCommonHelper);
         $result = $orderItemsObj->getItemList($oOrderItems);
         $this->assertNotEmpty($result);
     }
@@ -89,7 +91,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
 
     public function testGetGreetingCardItem()
     {
-        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getOrderItems'])->getMock();
         $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
@@ -104,7 +106,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
         ]);
         $oOrderItems->oxorder__oxgiftcardcost = new Field(true);
         $oOrderItems->oxorder__oxgiftcardvat = new Field(true);
-        $orderItemsObj = new OrderItems($oOrderItems, null);
+        $orderItemsObj = new OrderItems($oOrderItems, $this->oCommonHelper);
         $result = $orderItemsObj->getGreetingCardItem($oOrderItems);
         $this->assertNotEmpty($result);
     }
@@ -115,7 +117,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
 
     public function testGetGiftWrappingItem()
     {
-        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getOrderItems'])->getMock();
         $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
@@ -130,7 +132,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
         ]);
         $oOrderItems->oxorder__oxwrapcost = new Field(true);
         $oOrderItems->oxorder__oxwrapvat = new Field(true);
-        $orderItemsObj = new OrderItems($oOrderItems, null);
+        $orderItemsObj = new OrderItems($oOrderItems, $this->oCommonHelper);
         $result = $orderItemsObj->getGiftWrappingItem($oOrderItems);
         $this->assertNotEmpty($result);
     }
@@ -141,7 +143,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
 
     public function testGetPayCost()
     {
-        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getOrderItems'])->getMock();
         $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
@@ -156,7 +158,7 @@ class OrderItemsTest extends \Codeception\Test\Unit
         ]);
         $oOrderItems->oxorder__oxpaycost = new Field(true);
         $oOrderItems->oxorder__oxpayvat = new Field(true);
-        $orderItemsObj = new OrderItems($oOrderItems, null);
+        $orderItemsObj = new OrderItems($oOrderItems, $this->oCommonHelper);
         $result = $orderItemsObj->getPayCost($oOrderItems);
         $this->assertNotEmpty($result);
     }

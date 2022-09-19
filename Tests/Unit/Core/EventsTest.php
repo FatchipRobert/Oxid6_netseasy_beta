@@ -13,12 +13,14 @@ class EventsTest extends \Codeception\Test\Unit
      * @var \UnitTester
      */
     protected $oThankyouController;
+    protected $oxSession;
 
     protected function setUp(): void
     {
         parent::setUp();
         include_once dirname(__FILE__) . "/../../../../../../bootstrap.php";
         $this->oThankyouController = \oxNew(NetsEvent::class);
+        $this->oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
     }
 
     /**
@@ -26,10 +28,10 @@ class EventsTest extends \Codeception\Test\Unit
      */
     public function testOnActivate()
     {
-        Registry::getSession()->setVariable('isEventUnitTest', 'yes');
+        $this->oxSession->setVariable('isEventUnitTest', 'yes');
         $result = NetsEvent::onActivate();
         $this->assertNull($result);
-        Registry::getSession()->setVariable('isEventUnitTest', '');
+        $this->oxSession->setVariable('isEventUnitTest', '');
     }
 
     /**
@@ -37,10 +39,10 @@ class EventsTest extends \Codeception\Test\Unit
      */
     public function testOnDeactivate()
     {
-        Registry::getSession()->setVariable('isEventUnitTest', 'yes');
+        $this->oxSession->setVariable('isEventUnitTest', 'yes');
         $result = NetsEvent::onDeactivate();
         $this->assertNull($result);
-        Registry::getSession()->setVariable('isEventUnitTest', '');
+        $this->oxSession->setVariable('isEventUnitTest', '');
     }
 
     /**
@@ -48,10 +50,10 @@ class EventsTest extends \Codeception\Test\Unit
      */
     public function testExecuteModuleMigrations()
     {
-        Registry::getSession()->setVariable('isEventUnitTest', 'yes');
+        $this->oxSession->setVariable('isEventUnitTest', 'yes');
         $result = NetsEvent::executeModuleMigrations();
         $this->assertNull($result);
-        Registry::getSession()->setVariable('isEventUnitTest', '');
+        $this->oxSession->setVariable('isEventUnitTest', '');
     }
 
 }

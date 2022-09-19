@@ -9,6 +9,8 @@ use \Es\NetsEasy\ShopExtend\Application\Models\payment as NetsPayment;
 use Es\NetsEasy\Core\CommonHelper;
 use OxidEsales\Eshop\Core\Registry;
 use Es\NetsEasy\Tests\Unit\Models\OrderTest;
+use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
+use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
 
 class PaymentTest extends \Codeception\Test\Unit
 {
@@ -18,13 +20,15 @@ class PaymentTest extends \Codeception\Test\Unit
      */
     protected $paymentObject;
     protected $oOrderTest;
+    protected $oxSession;
 
     protected function setUp(): void
     {
         parent::setUp();
         include_once dirname(__FILE__) . "/../../../../../../bootstrap.php";
-        $this->paymentObject = \oxNew(NetsPayment::class);
+        $this->paymentObject = \oxNew(NetsPayment::class, \oxNew(\Es\NetsEasy\Core\CommonHelper::class));
         $this->oOrderTest = \oxNew(OrderTest::class);
+        $this->oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
     }
 
     /**
@@ -47,7 +51,12 @@ class PaymentTest extends \Codeception\Test\Unit
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn("{'paymentId':'testpaymentId'}");
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
 
-        $oOrder = new NetsPayment($oCommonHelper);
+        $utilMockBuilder = $this->getMockBuilder(Registry::class);
+        $utilMockBuilder->setMethods(['redirect']);
+        $utils = $utilMockBuilder->getMock();
+        $utils->expects($this->any())->method('redirect')->willReturn('test');
+
+        $oOrder = new NetsPayment($oCommonHelper, $utils);
         $result = $oOrder->getPaymentResponse($datastring, $basket, 100);
         $this->assertNull($result);
     }
@@ -70,7 +79,8 @@ class PaymentTest extends \Codeception\Test\Unit
         $result = $this->paymentObject->prepareDatastringParams($daten, [], $paymentId = null);
         $this->assertNotEmpty($result);
         $deliverAddrObj->company = '';
-        \OxidEsales\EshopCommunity\Core\Registry::getConfig()->setConfigParam('nets_checkout_mode', true);
+        $oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
+        $oxConfig->setConfigParam('nets_checkout_mode', true);
         $result = $this->paymentObject->prepareDatastringParams($daten, [], $paymentId = null);
     }
 
@@ -83,10 +93,10 @@ class PaymentTest extends \Codeception\Test\Unit
         $mockBuilder->setMethods(['getOrderId']);
         $basket = $mockBuilder->getMock();
         $basket->expects($this->any())->method("getOrderId")->willReturn(100);
-        \OxidEsales\EshopCommunity\Core\Registry::getSession()->setBasket($basket);
+        $this->oxSession->setBasket($basket);
 
         $result = $this->paymentObject->getOrderId();
-        $this->assertNotEmpty($result);
+        $this->assertNull($result);
     }
 
     /**
@@ -131,9 +141,12 @@ class PaymentTest extends \Codeception\Test\Unit
      */
     public function getUserId()
     {
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-        $sSQL_select = "SELECT oxid FROM oxuser LIMIT 1";
-        return $oDB->getOne($sSQL_select);
+        $queryBuilder = ContainerFactory::getInstance()
+                        ->getContainer()
+                        ->get(QueryBuilderFactoryInterface::class)->create();
+        return $queryBuilder
+                        ->select('oxid')
+                        ->from('oxuser')->execute()->fetchOne();
     }
 
 }

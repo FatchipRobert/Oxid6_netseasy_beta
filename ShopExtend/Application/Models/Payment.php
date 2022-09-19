@@ -5,6 +5,10 @@ namespace Es\NetsEasy\ShopExtend\Application\Models;
 use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Core\CommonHelper;
 use OxidEsales\EshopCommunity\Core\Registry;
+use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
+use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
+use Es\NetsEasy\Core\DebugHandler;
+use Es\NetsEasy\ShopExtend\Application\Models\PaymentGateway;
 
 /**
  * Nets Payment class
@@ -23,50 +27,69 @@ class Payment
     const MODULE_NAME = "nets_easy";
 
     protected $integrationType;
-    public $_NetsLog = true;
     protected $oCommonHelper;
-    protected $netsLog;
+    protected $oDebugHandler;
+    protected $queryBuilder;
+    protected $oxConfig;
+    protected $oxSession;
+    protected $oPaymentGateway;
+    protected $oxUtils;
 
-    public function __construct($commonHelper = null)
+    /**
+     * Constructor
+     * @param object $oxUtils The OXID Utils model injected object
+     * @param object $commonHelper The service file injected as object
+     * @return Null
+     */
+    public function __construct(CommonHelper $commonHelper, $oxUtils = null)
     {
-        $this->_NetsLog = true;
-        $this->netsLog = \oxNew(NetsLog::class);
+        $this->oDebugHandler = \oxNew(DebugHandler::class);
+        $this->oPaymentGateway = \oxNew(PaymentGateway::class);
+        $this->oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
+        $this->oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
         // works only if StaticHelper is not autoloaded yet!
-        if (!$commonHelper) {
-            $this->oCommonHelper = \oxNew(CommonHelper::class);
-        } else {
-            $this->oCommonHelper = $commonHelper;
-        }
+        $this->oCommonHelper = $commonHelper;
         $this->integrationType = self::HOSTED;
-        if (Registry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
+        if ($this->oxConfig->getConfigParam('nets_checkout_mode') == 'embedded') {
             $this->integrationType = self::EMBEDDED;
         }
+        if (!$oxUtils) {
+            $this->oxUtils = Registry::getUtils();
+        } else {
+            $this->oxUtils = $oxUtils;
+        }
+        $this->queryBuilder = ContainerFactory::getInstance()
+                ->getContainer()
+                ->get(QueryBuilderFactoryInterface::class);
     }
 
     /**
      * Function to get payment response
-     * @return payment id
+     * @param array $data The API post data
+     * @param object $oxBasket The BasketItems Model injected object
+     * @param string $oID The OXID Order ID
+     * @return string payment id
      */
     public function getPaymentResponse($data, $oBasket, $oID)
     {
-        $modus = Registry::getConfig()->getConfigParam('nets_blMode');
+        $modus = $this->oxConfig->getConfigParam('nets_blMode');
         if ($modus == 0) {
             $apiUrl = self::ENDPOINT_TEST;
         } else {
             $apiUrl = self::ENDPOINT_LIVE;
         }
-        $this->netsLog->log(true, "NetsOrder, api request data here 2 : ", json_encode($data));
+        $this->oDebugHandler->log("NetsOrder, api request data here 2 : " . json_encode($data));
         $api_return = $this->oCommonHelper->getCurlResponse($apiUrl, 'POST', json_encode($data));
         $response = json_decode($api_return, true);
         if (isset($response['paymentId'])) {
-            Registry::getSession()->setVariable('payment_id', $response['paymentId']);
+            $this->oxSession->setVariable('payment_id', $response['paymentId']);
         }
         if (!isset($response['paymentId'])) {
             $response['paymentId'] = null;
         }
-        $this->netsLog->log($this->_NetsLog, "NetsOrder, api return data create trans: ", json_decode($api_return, true));
+        $this->oDebugHandler->log("NetsOrder, api return data create trans: " . json_decode($api_return, true));
         // create entry in oxnets table for transaction
-        $this->netsLog->createTransactionEntry(json_encode($data), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
+        $this->oPaymentGateway->createTransactionEntry(json_encode($data), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
         // Set language for hosted payment page
         $language = Registry::getLang()->getLanguageAbbr();
         if ($language == 'en') {
@@ -100,25 +123,27 @@ class Payment
             $lang = 'es-ES';
         }
         if ($this->integrationType == self::HOSTED) {
-            Registry::getUtils()->redirect($response["hostedPaymentPageUrl"] . "&language=$lang");
+            $this->oxUtils->redirect($response["hostedPaymentPageUrl"] . "&language=$lang");
         }
         return $response['paymentId'];
     }
 
     /**
      * Function to get current order from basket
-     * @return array
+     * @return string
      */
     public function getOrderId()
     {
-        $mySession = Registry::getSession();
+        $mySession = $this->oxSession;
         $oBasket = $mySession->getBasket();
         return $oBasket->getOrderId();
     }
 
     /**
      * Function to save payment details
-     * @return null
+     * @param array $api_ret The API request array
+     * @param string $paymentId The NETS payment ID
+     * @return boolean
      */
     public function savePaymentDetails($api_ret, $paymentId = null)
     {
@@ -126,9 +151,23 @@ class Payment
             foreach ($api_ret['payment']['charges'] as $ky => $val) {
                 foreach ($val['orderItems'] as $key => $value) {
                     if (isset($val['chargeId'])) {
-                        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-                        $charge_query = "INSERT INTO `oxnets` (`transaction_id`, `charge_id`,  `product_ref`, `charge_qty`, `charge_left_qty`) " . "values ('" . $paymentId . "', '" . $val['chargeId'] . "', '" . $value['reference'] . "', '" . $value['quantity'] . "', '" . $value['quantity'] . "')";
-                        $oDB->Execute($charge_query);
+                        $queryBuilder = $this->queryBuilder->create();
+                        $queryBuilder->insert('oxnets')
+                                ->values(
+                                        array(
+                                            'transaction_id' => '?',
+                                            'charge_id' => '?',
+                                            'product_ref' => '?',
+                                            'charge_qty' => '?',
+                                            'charge_left_qty' => '?'
+                                        )
+                                )
+                                ->setParameter(0, $paymentId)
+                                ->setParameter(1, $val['chargeId'])
+                                ->setParameter(2, $value['reference'])
+                                ->setParameter(3, $value['quantity'])
+                                ->setParameter(4, $value['quantity']);
+                        $queryData = $queryBuilder->execute();
                     }
                 }
             }
@@ -138,24 +177,27 @@ class Payment
 
     /**
      * Function to prepare datastring params array
+     * @param array $daten The NETS API request data array
+     * @param array $data The NETS configuration data array
+     * @param string $paymentId The NETS payment ID
      * @return array
      */
     public function prepareDatastringParams($daten, $data, $paymentId = null)
     {
         $delivery_address = $daten['delivery_address'];
         $data['checkout']['integrationType'] = $this->integrationType;
-        if (Registry::getConfig()->getConfigParam('nets_checkout_mode') == 'embedded') {
-            $data['checkout']['url'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=order&fnc=execute&paymentid=' . $paymentId);
+        if ($this->oxConfig->getConfigParam('nets_checkout_mode') == 'embedded') {
+            $data['checkout']['url'] = urldecode($this->oxConfig->getShopUrl() . 'index.php?cl=order&fnc=execute&paymentid=' . $paymentId);
         } else {
-            $data['checkout']['returnUrl'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=order&fnc=returnhosted&paymentid=' . $paymentId);
-            $data['checkout']['cancelUrl'] = urldecode(Registry::getConfig()->getShopUrl() . 'index.php?cl=order');
+            $data['checkout']['returnUrl'] = urldecode($this->oxConfig->getShopUrl() . 'index.php?cl=order&fnc=returnhosted&paymentid=' . $paymentId);
+            $data['checkout']['cancelUrl'] = urldecode($this->oxConfig->getShopUrl() . 'index.php?cl=order');
         }
         // if autocapture is enabled in nets module settings, pass it to nets api
-        if (Registry::getConfig()->getConfigParam('nets_autocapture')) {
+        if ($this->oxConfig->getConfigParam('nets_autocapture')) {
             $data['checkout']['charge'] = true;
         }
-        $data['checkout']['termsUrl'] = Registry::getConfig()->getConfigParam('nets_terms_url');
-        $data['checkout']['merchantTermsUrl'] = Registry::getConfig()->getConfigParam('nets_merchant_terms_url');
+        $data['checkout']['termsUrl'] = $this->oxConfig->getConfigParam('nets_terms_url');
+        $data['checkout']['merchantTermsUrl'] = $this->oxConfig->getConfigParam('nets_merchant_terms_url');
         $data['checkout']['merchantHandlesConsumerData'] = true;
         $data['checkout']['consumer'] = [
             'email' => $daten['email'],
@@ -182,6 +224,23 @@ class Payment
             ];
         }
         return $data;
+    }
+
+    /**
+     * Function to get active payments
+     * @return array
+     */
+    public function getActivePayments()
+    {
+        $queryBuilder = $this->queryBuilder->create();
+        $queryBuilder
+                ->select('OXID')
+                ->from('oxpayments')
+                ->where('oxactive = :oxactive')
+                ->setParameters([
+                    'oxactive' => 1,
+        ]);
+        return $queryBuilder->execute()->fetchAll();
     }
 
 }

@@ -4,6 +4,8 @@ namespace Es\NetsEasy\ShopExtend\Application\Models;
 
 use Es\NetsEasy\Core\CommonHelper;
 use Es\NetsEasy\ShopExtend\Application\Models\OrderItems;
+use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
+use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
 
 /**
  * Class defines Nets payment status
@@ -14,10 +16,20 @@ class PaymentStatus
     protected $oCommonHelper;
     protected $paymentStatusObject;
     protected $oOrderItems;
+    protected $queryBuilder;
 
-    public function __construct($paymentStatusObject = null, $commonHelper = null)
+    /**
+     * Constructor
+     * @param object $paymentStatusObject The OXID PaymentStatus model
+     * @param object $commonHelper The service file injected as object
+     * @return Null
+     */
+    public function __construct($paymentStatusObject = null, CommonHelper $commonHelper)
     {
-        $this->oOrderItems = \oxNew(OrderItems::class);
+        $this->oOrderItems = \oxNew(OrderItems::class, null, \oxNew(\Es\NetsEasy\Core\CommonHelper::class));
+        $this->queryBuilder = ContainerFactory::getInstance()
+                ->getContainer()
+                ->get(QueryBuilderFactoryInterface::class);
 
         if (!$paymentStatusObject) {
             $this->paymentStatusObject = $this;
@@ -25,45 +37,62 @@ class PaymentStatus
             $this->paymentStatusObject = $paymentStatusObject;
         }
         // works only if StaticHelper is not autoloaded yet!
-        if (!$commonHelper) {
-            $this->oCommonHelper = \oxNew(CommonHelper::class);
-        } else {
-            $this->oCommonHelper = $commonHelper;
-        }
+        $this->oCommonHelper = $commonHelper;
     }
 
     /**
      * Function to check the nets payment status and display in admin order list backend page
-     * @return Payment Status
+     * @param string $oxoder_id The OXID Order ID
+     * @return string Payment Status
      */
     public function getEasyStatus($oxoder_id)
     {
         $payment_id = $this->oCommonHelper->getPaymentId($oxoder_id);
         if (empty($payment_id)) {
-            $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
-            $oDb->execute("UPDATE oxnets SET payment_status = ? WHERE transaction_id = ? ", [
-                1,
-                $this->oCommonHelper->getPaymentId($oxoder_id)
-            ]);
-            $oDb->execute("UPDATE oxorder SET oxstorno = ? WHERE oxid = ? ", [
-                1,
-                $oxoder_id
-            ]);
+            $queryBuilder = $this->queryBuilder->create();
+            $queryBuilder
+                    ->update('oxnets', 'o')
+                    ->set('o.payment_status', '?')
+                    ->where('o.transaction_id = ?')
+                    ->setParameter(0, 1)
+                    ->setParameter(1, $this->oCommonHelper->getPaymentId($oxoder_id))
+            ;
+            $queryData = $queryBuilder->execute();
+            $queryBuilder = $this->queryBuilder->create();
+            $queryBuilder
+                    ->update('oxorder', 'o')
+                    ->set('o.oxstorno', '?')
+                    ->where('o.oxid = ?')
+                    ->setParameter(0, 1)
+                    ->setParameter(1, $oxoder_id)
+            ;
+            $queryBuilder->execute();
             return [
                 "paymentErr" => "Order is cancelled. Payment not found."
             ];
         }
         // Get order db status from oxorder if cancelled
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-        $sSQL_select = "SELECT oxstorno FROM oxorder WHERE oxid = ? LIMIT 1";
-        $orderCancel = $oDB->getOne($sSQL_select, [
-            $oxoder_id
+
+        $queryBuilder = $this->queryBuilder->create();
+        $queryBuilder
+                ->select('oxstorno')
+                ->from('oxorder')
+                ->where('oxid = :oxorder_id')
+                ->setParameters([
+                    'oxorder_id' => $oxoder_id,
         ]);
+        $orderCancel = $queryBuilder->execute()->fetchOne();
         // Get nets payment db status from oxnets if cancelled
-        $sSQL_select = "SELECT payment_status FROM oxnets WHERE oxorder_id = ? LIMIT 1";
-        $payStatusDb = $oDB->getOne($sSQL_select, [
-            $oxoder_id
+
+        $queryBuilder = $this->queryBuilder->create();
+        $queryBuilder
+                ->select('payment_status')
+                ->from('oxnets')
+                ->where('oxorder_id = :oxorder_id')
+                ->setParameters([
+                    'oxorder_id' => $oxoder_id,
         ]);
+        $payStatusDb = $queryBuilder->execute()->fetchOne();
         // if order is cancelled and payment is not updated as cancelled, call nets cancel payment api
         if ($orderCancel && $payStatusDb != 1) {
             $data = $this->oOrderItems->getOrderItems($oxoder_id, false);
@@ -87,16 +116,23 @@ class PaymentStatus
             return $e->getMessage();
         }
         $allStatus = $this->paymentStatusObject->getPaymentStatus($response, $oxoder_id);
-        $oDb = \OxidEsales\Eshop\Core\DatabaseProvider::getDb();
-        $oDb->execute("UPDATE oxnets SET payment_status = ? WHERE transaction_id = ? ", [
-            $allStatus['dbPayStatus'],
-            $this->oCommonHelper->getPaymentId($oxoder_id)
-        ]);
+
+        $queryBuilder = $this->queryBuilder->create();
+        $queryBuilder
+                ->update('oxnets', 'o')
+                ->set('o.payment_status', '?')
+                ->where('o.transaction_id = ?')
+                ->setParameter(0, $allStatus['dbPayStatus'])
+                ->setParameter(1, $this->oCommonHelper->getPaymentId($oxoder_id))
+        ;
+        $queryData = $queryBuilder->execute();
         return $allStatus;
     }
 
     /**
      * Function to get payment status
+     * @param array $response The NETS API response
+     * @param string $oxoder_id The OXID Order ID
      * @return array
      */
     public function getPaymentStatus($response, $oxoder_id)
@@ -131,10 +167,13 @@ class PaymentStatus
                     $paymentStatus = "Partial Charged";
                     $langStatus = "partial_charge";
                     $dbPayStatus = 3; // For payment status as Partial Charged in oxnets db table
-                    $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-                    $oDB->Execute("UPDATE oxnets SET partial_amount = '{$partialc}' WHERE oxorder_id = '{$oxoder_id}'");
-                    $oDB->Execute("UPDATE oxnets SET charge_id = '{$chargeid}' WHERE oxorder_id = '{$oxoder_id}'");
-                    $oDB->Execute("UPDATE oxorder SET oxpaid = '{$chargedate}' WHERE oxid = '{$oxoder_id}'");
+
+                    $queryBuilder = $this->queryBuilder->create();
+                    $queryBuilder->update('oxnets', 'o')->set('o.partial_amount', '?')->where('o.oxorder_id = ?')->setParameter(0, "'{$partialc}'")->setParameter(1, "'{$oxoder_id}'")->execute();
+                    $queryBuilder = $this->queryBuilder->create();
+                    $queryBuilder->update('oxnets', 'o')->set('o.charge_id', '?')->where('o.oxorder_id = ?')->setParameter(0, "'{$chargeid}'")->setParameter(1, "'{$oxoder_id}'")->execute();
+                    $queryBuilder = $this->queryBuilder->create();
+                    $queryBuilder->update('oxorder', 'o')->set('o.oxpaid', '?')->where('o.oxid = ?')->setParameter(0, "'{$chargedate}'")->setParameter(1, "'{$oxoder_id}'")->execute();
                 } else if ($pending) {
                     $paymentStatus = "Refund Pending";
                     $langStatus = "refund_pending";
@@ -143,10 +182,13 @@ class PaymentStatus
                         $paymentStatus = "Partial Refunded";
                         $langStatus = "partial_refund";
                         $dbPayStatus = 5; // For payment status as Partial Charged in oxnets db table
-                        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-                        $oDB->Execute("UPDATE oxnets SET partial_amount = '{$partialr}' WHERE oxorder_id = '{$oxoder_id}'");
-                        $oDB->Execute("UPDATE oxnets SET charge_id = '{$chargeid}' WHERE oxorder_id = '{$oxoder_id}'");
-                        $oDB->Execute("UPDATE oxorder SET oxpaid = '{$chargedate}' WHERE oxid = '{$oxoder_id}'");
+
+                        $queryBuilder = $this->queryBuilder->create();
+                        $queryBuilder->update('oxnets', 'o')->set('o.partial_amount', '?')->where('o.oxorder_id = ?')->setParameter(0, "'{$partialc}'")->setParameter(1, "'{$oxoder_id}'")->execute();
+                        $queryBuilder = $this->queryBuilder->create();
+                        $queryBuilder->update('oxnets', 'o')->set('o.charge_id', '?')->where('o.oxorder_id = ?')->setParameter(0, "'{$chargeid}'")->setParameter(1, "'{$oxoder_id}'")->execute();
+                        $queryBuilder = $this->queryBuilder->create();
+                        $queryBuilder->update('oxorder', 'o')->set('o.oxpaid', '?')->where('o.oxid = ?')->setParameter(0, "'{$chargedate}'")->setParameter(1, "'{$oxoder_id}'")->execute();
                     } else {
                         $paymentStatus = "Refunded";
                         $langStatus = "refunded";

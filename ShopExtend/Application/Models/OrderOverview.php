@@ -2,6 +2,9 @@
 
 namespace Es\NetsEasy\ShopExtend\Application\Models;
 
+use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
+use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
+
 /**
  * Class defines Nets payment operations in order view
  */
@@ -10,21 +13,29 @@ class OrderOverview
     /*
      * Function to fetch payment method type from databse table oxorder
      * @param $oxorder_id
-     * @return payment method
+     * @return string payment method
      */
 
     public function getPaymentMethod($oxoder_id)
     {
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-        $sSQL_select = "SELECT OXPAYMENTTYPE FROM oxorder WHERE oxid = ? LIMIT 1";
-        $payMethod = $oDB->getOne($sSQL_select, [
-            $oxoder_id
+        $queryBuilder = ContainerFactory::getInstance()
+                        ->getContainer()
+                        ->get(QueryBuilderFactoryInterface::class)->create();
+        $queryBuilder
+                ->select('OXPAYMENTTYPE')
+                ->from('oxorder')
+                ->where('oxid = :oxorder_id')
+                ->setParameters([
+                    'oxorder_id' => $oxoder_id,
         ]);
+        $payMethod = $queryBuilder->execute()->fetchOne();
+
         return $payMethod;
     }
 
     /*
      * Function to get shopping cost
+     * @param array $item The order items array
      * @return array
      */
 
@@ -46,12 +57,35 @@ class OrderOverview
 
     /*
      * Function to prepare amount
+     * @param int $amount The order item amount
      * @return int
      */
 
     public function prepareAmount($amount = 0)
     {
         return (int) round($amount * 100);
+    }
+
+    /*
+     * Fetch partial amount
+     * @param string $oxoder_id The order id
+     * @return int
+     */
+
+    public function getPartialAmount($oxoder_id)
+    {
+        $queryBuilder = ContainerFactory::getInstance()
+                        ->getContainer()
+                        ->get(QueryBuilderFactoryInterface::class)->create();
+        $queryBuilder
+                ->select('partial_amount')
+                ->from('oxnets')
+                ->where('oxorder_id = :oxorder_id')
+                ->setParameters([
+                    'oxorder_id' => $oxoder_id,
+        ]);
+        $partial_amount = $queryBuilder->execute()->fetchOne();
+        return $partial_amount;
     }
 
 }

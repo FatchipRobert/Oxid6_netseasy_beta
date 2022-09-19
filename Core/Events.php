@@ -17,8 +17,6 @@ use OxidEsales\EshopCommunity\Core\Registry;
 class Events
 {
 
-    static $NetsLog = true;
-
     /**
      * Function to execute action on activate event
      * @return null
@@ -26,8 +24,9 @@ class Events
     static function onActivate()
     {
         // execute module migrations
-        Registry::getSession()->setVariable('activeStatus', 1);
-        if (empty(Registry::getSession()->getVariable('isEventUnitTest'))) {
+        $oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
+        $oxSession->setVariable('activeStatus', 1);
+        if (empty($oxSession->getVariable('isEventUnitTest'))) {
             self::executeModuleMigrations();
         }
     }
@@ -38,21 +37,24 @@ class Events
      */
     static function onDeactivate()
     {
-        Registry::getSession()->setVariable('activeStatus', 0);
-        if (empty(Registry::getSession()->getVariable('isEventUnitTest'))) {
+        $oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
+        $oxSession->setVariable('activeStatus', 0);
+        if (empty($oxSession->getVariable('isEventUnitTest'))) {
             self::executeModuleMigrations();
         }
     }
 
     /**
      * Execute necessary module migrations on activate event
+     * @return null
      */
     static function executeModuleMigrations()
     {
         $migrations = (new MigrationsBuilder())->build();
         $output = new BufferedOutput();
         $migrations->setOutput($output);
-        if (empty(Registry::getSession()->getVariable('isEventUnitTest'))) {
+        $oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
+        if (empty($oxSession->getVariable('isEventUnitTest'))) {
             $neeedsUpdate = $migrations->execute('migrations:up-to-date', 'esnetseasy');
             if ($neeedsUpdate) {
                 $migrations->execute('migrations:migrate', 'esnetseasy');

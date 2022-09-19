@@ -12,6 +12,8 @@ use \Es\NetsEasy\ShopExtend\Application\Models\BasketItems as NetsBasketItems;
 use \Es\NetsEasy\ShopExtend\Application\Models\Payment as NetsPayment;
 use \Es\NetsEasy\ShopExtend\Application\Models\Address as NetsAddress;
 use OxidEsales\EshopCommunity\Core\Registry;
+use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
+use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
 
 class OrderTest extends \Codeception\Test\Unit
 {
@@ -20,12 +22,25 @@ class OrderTest extends \Codeception\Test\Unit
      * @var \UnitTester
      */
     protected $orderObject;
+    protected $oxSession;
+    protected $objCommonHelper;
+    protected $objOrder;
+    protected $objAddress;
+    protected $objPayment;
+    protected $objBasketItems;
 
     protected function setUp(): void
     {
         parent::setUp();
         include_once dirname(__FILE__) . "/../../../../../../bootstrap.php";
-        $this->orderObject = \oxNew(NetsOrder::class);
+        $this->objCommonHelper = \oxNew(CommonHelper::class);
+        $this->objOrder = \oxNew(Order::class);
+        $this->objAddress = \oxNew(NetsAddress::class);
+        $this->objPayment = \oxNew(NetsPayment::class, $this->objCommonHelper);
+        $this->objBasketItems = \oxNew(NetsBasketItems::class);
+
+        $this->orderObject = new NetsOrder(null, $this->objCommonHelper, null, $this->objOrder, $this->objBasketItems, $this->objPayment, $this->objAddress);
+        $this->oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
     }
 
     /**
@@ -33,8 +48,8 @@ class OrderTest extends \Codeception\Test\Unit
      */
     public function testCreateNetsTransaction()
     {
-        Registry::getSession()->setVariable('usr', $this->getUserId());
-        $oOrder = $this->getMockBuilder(NetsOrder::class)->setMethods(['updateOrdernr', 'logOrderID', 'getOrderId'])->getMock();
+        $this->oxSession->setVariable('usr', $this->getUserId());
+        $oOrder = $this->getMockBuilder(NetsOrder::class)->disableOriginalConstructor()->setMethods(['updateOrdernr', 'logOrderID', 'getOrderId'])->getMock();
         $oOrder->expects($this->any())->method('updateOrdernr')->willReturn(1);
         $oOrder->expects($this->any())->method('logOrderID')->willReturn(1);
         $oOrder->expects($this->any())->method('getOrderId')->willReturn(1);
@@ -54,7 +69,7 @@ class OrderTest extends \Codeception\Test\Unit
             'netTotalAmount' => 10000,
             'oxbprice' => 10000
         ]);
-        Registry::getSession()->setBasket($basket);
+        $this->oxSession->setBasket($basket);
         $oNetsBasketItems = $this->getMockBuilder(NetsBasketItems::class)->setMethods(['getItemList', 'getDiscountItem', 'getProductItem'])->getMock();
         $oNetsBasketItems->expects($this->any())->method('getItemList')->willReturn(1);
         $oNetsBasketItems->expects($this->any())->method('getDiscountItem')->willReturn(1);
@@ -71,7 +86,7 @@ class OrderTest extends \Codeception\Test\Unit
             'oxbprice' => 10000
         ]);
 
-        $oNetsPayment = $this->getMockBuilder(NetsPayment::class)->setMethods(['prepareDatastringParams', 'getPaymentResponse'])->getMock();
+        $oNetsPayment = $this->getMockBuilder(NetsPayment::class)->disableOriginalConstructor()->setMethods(['prepareDatastringParams', 'getPaymentResponse'])->getMock();
         $oNetsPayment->expects($this->any())->method('prepareDatastringParams')->willReturn(1);
         $oNetsPayment->expects($this->any())->method('getPaymentResponse')->willReturn(true);
 
@@ -79,24 +94,9 @@ class OrderTest extends \Codeception\Test\Unit
         $oNetsAddress->expects($this->any())->method('setAddress')->willReturn(['delivery_address']);
         $oNetsAddress->expects($this->any())->method('getDeliveryAddress')->willReturn(1);
 
-        $oOrdeObj = new NetsOrder($oOrder, null, null, null, $oNetsBasketItems, $oNetsPayment, $oNetsAddress);
+        $oOrdeObj = new NetsOrder($oOrder, $this->objCommonHelper, null, $this->objOrder, $oNetsBasketItems, $oNetsPayment, $oNetsAddress);
         $result = $oOrdeObj->createNetsTransaction(100);
         $this->assertTrue($result);
-    }
-
-    /**
-     * Test case to log Order ID
-     */
-    public function testLogOrderID()
-    {
-        $oOrder = $this->getMockBuilder(NetsOrder::class)->setMethods(['logOrderID'])->getMock();
-        $oOrder->expects($this->any())->method('logOrderID')->willReturn(1);
-        $oOrder->oxorder__oxordernr = new Field(true);
-        Registry::getSession()->setVariable('sess_challenge', '0230000062a996e863308f63c7333a01');
-        $oOrdeObj = new NetsOrder($oOrder, null, null);
-        $result = $oOrdeObj->logOrderID($oOrder, null);
-        $this->assertNull($result);
-        $oOrdeObj = new NetsOrder($oOrder, null, $oOrder);
     }
 
     /**
@@ -114,7 +114,7 @@ class OrderTest extends \Codeception\Test\Unit
      */
     public function testProcessOrder()
     {
-        Registry::getSession()->setVariable('payment_id', 'test_payment_id');
+        $this->oxSession->setVariable('payment_id', 'test_payment_id');
 
         $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['finalizeOrder'])->getMock();
         $oMockOrder->oxorder__oxordernr = new Field(true);
@@ -155,7 +155,7 @@ class OrderTest extends \Codeception\Test\Unit
         $oMockUser = $this->getMockBuilder(User::class)->setMethods(['getEncodedDeliveryAddress'])->getMock();
         $oMockUser->expects($this->once())->method('getEncodedDeliveryAddress')->willReturn(1);
 
-        $oOrdeObj = new NetsOrder(null, $oCommonHelper, null, $oMockOrder);
+        $oOrdeObj = new NetsOrder(null, $oCommonHelper, null, $oMockOrder, $this->objBasketItems, $this->objPayment, $this->objAddress);
         $result = $oOrdeObj->processOrder($oMockUser);
         $this->assertTrue($result);
     }
@@ -167,23 +167,9 @@ class OrderTest extends \Codeception\Test\Unit
     {
         $oMockOrder = $this->getMockBuilder(Order::class)->setMethods(['finalizeOrder'])->getMock();
         $oMockOrder->oxorder__oxordernr = new Field(true);
-        $oOrdeObj = new NetsOrder(null, null, null, $oMockOrder);
+        $oOrdeObj = new NetsOrder(null, $this->objCommonHelper, null, $oMockOrder, $this->objBasketItems, $this->objPayment, $this->objAddress);
         $result = $oOrdeObj->updateOrdernr(100);
         $this->assertTrue($result);
-    }
-
-    /**
-     * Test case to get Order Id of order
-     */
-    public function testGetOrderId()
-    {
-        $mockBuilder = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class);
-        $mockBuilder->setMethods(['getOrderId']);
-        $basket = $mockBuilder->getMock();
-        $basket->expects($this->any())->method("getOrderId")->willReturn(100);
-        Registry::getSession()->setBasket($basket);
-        $result = $this->orderObject->getOrderId();
-        $this->assertNotEmpty($result);
     }
 
     /**
@@ -197,7 +183,8 @@ class OrderTest extends \Codeception\Test\Unit
         } else {
             $this->assertFalse($embedded);
         }
-        Registry::getConfig()->setConfigParam('nets_checkout_mode', true);
+        $oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
+        $oxConfig->setConfigParam('nets_checkout_mode', true);
         $embedded = $this->orderObject->isEmbedded();
         if ($embedded) {
             $this->assertTrue($embedded);
@@ -207,14 +194,28 @@ class OrderTest extends \Codeception\Test\Unit
     }
 
     /**
+     * Test case to get Order payment Id
+     */
+    public function testGetOrderPaymentId()
+    {
+        $result = $this->orderObject->getOrderPaymentId(1);
+        if ($result) {
+            $this->assertNotEmpty($result);
+        }
+    }
+
+    /**
      * Function to get user id
      * @return string
      */
     public function getUserId()
     {
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-        $sSQL_select = "SELECT oxid FROM oxuser LIMIT 1";
-        return $oDB->getOne($sSQL_select);
+        $queryBuilder = ContainerFactory::getInstance()
+                        ->getContainer()
+                        ->get(QueryBuilderFactoryInterface::class)->create();
+        return $queryBuilder
+                        ->select('oxid')
+                        ->from('oxuser')->execute()->fetchOne();
     }
 
     /**

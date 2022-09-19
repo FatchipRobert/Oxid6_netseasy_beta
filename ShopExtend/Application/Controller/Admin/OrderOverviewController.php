@@ -2,7 +2,6 @@
 
 namespace Es\NetsEasy\ShopExtend\Application\Controller\Admin;
 
-use Es\NetsEasy\Api\NetsLog;
 use Es\NetsEasy\Core\CommonHelper;
 use Es\NetsEasy\ShopExtend\Application\Models\OrderOverview;
 use Es\NetsEasy\ShopExtend\Application\Models\OrderItems;
@@ -10,6 +9,7 @@ use Es\NetsEasy\ShopExtend\Application\Models\PaymentStatus;
 use Es\NetsEasy\ShopExtend\Application\Models\PaymentOperations;
 use OxidEsales\EshopCommunity\Core\Request;
 use OxidEsales\EshopCommunity\Core\Registry;
+use Es\NetsEasy\Core\DebugHandler;
 
 /**
  * Class controls Nets Order Overview - In use for admin order list customization
@@ -24,21 +24,32 @@ class OrderOverviewController extends OrderOverviewController_parent
     const ENDPOINT_LIVE_CHARGES = 'https://api.dibspayment.eu/v1/charges/';
     const RESPONSE_TYPE = "application/json";
 
-    protected $_NetsLog;
     protected $oOrderOverview;
     protected $oCommonHelper = false;
     protected $oxUtils;
     protected $oOrderOverviewController;
-    protected $netsLog;
+    protected $oDebugHandler;
     protected $oOrderItems;
     protected $oPaymentStatus;
     private $oPaymentOperations;
+    protected $oxConfig;
 
+    /**
+     * Constructor
+     * @param  object $oOrderOverviewController The Order Overview Controller injected object
+     * @param  object $oOrderOverview The Order Overview model injected object
+     * @param  object $commonHelper The service file injected as object
+     * @param  object $oxUtils The oxid Utils injected object
+     * @param  object $oOrderItems The Order Items Model injected object
+     * @param  object $oPaymentStatus The PaymentStatus Model injected object
+     * @param  object $oPaymentOperations The PaymentOperations Model injected object
+     * @return Null
+     */
     public function __construct($oOrderOverviewController = null, $oOrderOverview = null, $commonHelper = null, $oxUtils = null, $oOrderItems = null, $oPaymentStatus = null, $oPaymentOperations = null)
     {
-        $this->netsLog = \oxNew(NetsLog::class);
-        $this->_NetsLog = $this->getConfig()->getConfigParam('nets_blDebug_log');
-        $this->netsLog->log($this->_NetsLog, "NetsOrderOverview, constructor");
+        $this->oDebugHandler = \oxNew(DebugHandler::class);
+
+        $this->oDebugHandler->log("NetsOrderOverview, constructor");
 
         if (!$oOrderOverviewController) {
             $this->oOrderOverviewController = $this;
@@ -62,24 +73,26 @@ class OrderOverviewController extends OrderOverviewController_parent
         }
 
         if (!$oOrderItems) {
-            $this->oOrderItems = \oxNew(OrderItems::class);
+            $this->oOrderItems = \oxNew(OrderItems::class, null, $this->oCommonHelper);
         } else {
             $this->oOrderItems = $oOrderItems;
         }
         if (!$oPaymentStatus) {
-            $this->oPaymentStatus = \oxNew(PaymentStatus::class);
+            $this->oPaymentStatus = \oxNew(PaymentStatus::class, null, $this->oCommonHelper);
         } else {
             $this->oPaymentStatus = $oPaymentStatus;
         }
         if (!$oPaymentOperations) {
-            $this->oPaymentOperations = \oxNew(PaymentOperations::class);
+            $this->oPaymentOperations = \oxNew(PaymentOperations::class, null, $this->oCommonHelper, null);
         } else {
             $this->oPaymentOperations = $oPaymentOperations;
         }
+        $this->oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
     }
 
     /**
      * Function to check the nets payment status and display in admin order list backend page
+     * @param string $oxoder_id The OXID order id
      * @return array
      */
     public function isEasy($oxoder_id)
@@ -98,6 +111,8 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /**
      * Function to get pay language status
+     * @param string $response The response payment language
+     * @param string $oxoder_id The OXID order id
      * @return array
      */
     public function getPayLangStatus($response, $oxoder_id)
@@ -108,6 +123,7 @@ class OrderOverviewController extends OrderOverviewController_parent
     /*
      * Function to capture nets transaction - calls Charge API
      * redirects to admin overview listing page
+     * @return Null
      */
 
     public function getOrderCharged()
@@ -115,13 +131,14 @@ class OrderOverviewController extends OrderOverviewController_parent
         $stoken = Request::getRequestParameter('stoken');
         $admin_sid = Request::getRequestParameter('force_admin_sid');
         $this->oPaymentOperations->getOrderCharged();
-        return $this->oxUtils->redirect($this->getConfig()
+        return $this->oxUtils->redirect($this->oxConfig
                                 ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
     /*
      * Function to capture nets transaction - calls Refund API
      * redirects to admin overview listing page
+     * @return Null
      */
 
     public function getOrderRefund()
@@ -129,13 +146,14 @@ class OrderOverviewController extends OrderOverviewController_parent
         $stoken = Request::getRequestParameter('stoken');
         $admin_sid = Request::getRequestParameter('force_admin_sid');
         $this->oPaymentOperations->getOrderRefund();
-        return $this->oxUtils->redirect($this->getConfig()
+        return $this->oxUtils->redirect($this->oxConfig
                                 ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
     /*
      * Function to capture nets transaction - calls Cancel API
      * redirects to admin overview listing page
+     * @return Null
      */
 
     public function getOrderCancel()
@@ -154,13 +172,14 @@ class OrderOverviewController extends OrderOverviewController_parent
         ];
         $api_return = $this->oCommonHelper->getCurlResponse($cancelUrl, 'POST', json_encode($body));
         $response = json_decode($api_return, true);
-        return $this->oxUtils->redirect($this->getConfig()
+        return $this->oxUtils->redirect($this->oxConfig
                                 ->getSslShopUrl() . 'admin/index.php?cl=admin_order&force_admin_sid' . $admin_sid . '&stoken=' . $stoken);
     }
 
     /*
      * Function to get order items to pass capture, refund, cancel api
      * @param $oxorder oxid order id alphanumeric
+     * @param $blExcludeCanceled The OXID Exclude Canceled
      * @return array order items and amount
      */
 
@@ -171,7 +190,7 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /*
      * Function to get list of partial charge/refund and reserved items list
-     * @param oxorder id
+     * @param string $oxid The OXID order Id
      * @return array of reserved, partial charged,partial refunded items
      */
 
@@ -239,6 +258,10 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /*
      * Get List of items to pass to frontend for charged, refunded items
+     * @param  array $response The response array
+     * @param  array $itemsList The  items list array
+     * @param  array $chargedItems The charged items
+     * @param  array $refundedItems The refunded items
      * @return array
      */
 
@@ -264,17 +287,13 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /*
      * Fetch partial amount
+     * @param  string $oxoder_id The OXID order id
      * @return int
      */
 
     public function getPartial($oxoder_id)
     {
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-        $sSQL_select = "SELECT partial_amount FROM oxnets WHERE oxorder_id = ? LIMIT 1";
-        $partial_amount = $oDB->getOne($sSQL_select, [
-            $oxoder_id
-        ]);
-        return $partial_amount;
+        return $this->oOrderOverview->getPartialAmount($oxoder_id);
     }
 
     /*
@@ -284,12 +303,13 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     public function debugMode()
     {
-        $debug = $this->getConfig()->getConfigParam('nets_blDebug_log');
+        $debug = $this->oxConfig->getConfigParam('nets_blDebug_log');
         return $debug;
     }
 
     /*
      * Function to get response
+     * @param  string $oxoder_id The OXID order id
      * @return array
      */
 
@@ -303,8 +323,8 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /*
      * Function to fetch payment method type from databse table oxorder
-     * @param $oxorder_id
-     * @return payment method
+     * @param  string $oxoder_id The OXID order id
+     * @return string payment method
      */
 
     public function getPaymentMethod($oxoder_id)
@@ -314,12 +334,12 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /*
      * Function to fetch payment api url
-     * @return payment api url
+     * @return string payment api url
      */
 
     public function getApiUrl()
     {
-        if ($this->getConfig()->getConfigParam('nets_blMode') == 0) {
+        if ($this->oxConfig->getConfigParam('nets_blMode') == 0) {
             return self::ENDPOINT_TEST;
         } else {
             return self::ENDPOINT_LIVE;
@@ -328,6 +348,7 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /*
      * Function to get charged items list
+     * @param  array $response The response array
      * @return array
      */
 
@@ -362,6 +383,7 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /*
      * Function to get refund items list
+     * @param  array $response The response array
      * @return array
      */
 
@@ -394,6 +416,7 @@ class OrderOverviewController extends OrderOverviewController_parent
 
     /*
      * Function to fetch payment id from database
+     * @param string $oxid The OXID order Id
      * @return payment id
      */
 

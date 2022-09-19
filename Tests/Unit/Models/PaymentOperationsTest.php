@@ -19,7 +19,7 @@ class PaymentOperationsTest extends \Codeception\Test\Unit
     {
         parent::setUp();
         include_once dirname(__FILE__) . "/../../../../../../bootstrap.php";
-        $this->oPaymentOperations = \oxNew(PaymentOperations::class);
+        $this->oPaymentOperations = \oxNew(PaymentOperations::class, null, \oxNew(\Es\NetsEasy\Core\CommonHelper::class), \oxNew(\Es\NetsEasy\ShopExtend\Application\Models\OrderItems::class, null, \oxNew(\Es\NetsEasy\Core\CommonHelper::class)));
         $this->oOrderOverviewControllerTest = \oxNew(OrderOverviewControllerTest::class);
     }
 
@@ -33,7 +33,7 @@ class PaymentOperationsTest extends \Codeception\Test\Unit
         $_POST['reference'] = "1205";
         $_POST['charge'] = 1;
 
-        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getOrderItems'])->getMock();
         $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(['items' => [0 => [
                     'reference' => '1205',
                     'name' => 'ABC',
@@ -46,7 +46,7 @@ class PaymentOperationsTest extends \Codeception\Test\Unit
                     'netTotalAmount' => 10000,
                     'oxbprice' => 10000
         ]]]);
-        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->setMethods(['getValueItem'])->getMock();
+        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->disableOriginalConstructor()->setMethods(['getValueItem'])->getMock();
         $oPaymentOperations->expects($this->any())->method('getValueItem')->willReturn([
             'reference' => 'reference',
             'name' => 'ABC',
@@ -97,7 +97,7 @@ class PaymentOperationsTest extends \Codeception\Test\Unit
         $_POST['charge'] = 1;
         $response = $this->oOrderOverviewControllerTest->getNetsPaymentResponce();
         $response = ['response' => json_decode($response, true)];
-        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->setMethods(['getOrderItems', 'getChargeId', 'getItemForRefund'])->getMock();
+        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->disableOriginalConstructor()->setMethods(['getOrderItems', 'getChargeId', 'getItemForRefund'])->getMock();
         $oPaymentOperations->expects($this->any())->method('getOrderItems')->willReturn(['items' => [0 => [
                     'reference' => '1205',
                     'name' => 'ABC',
@@ -128,7 +128,7 @@ class PaymentOperationsTest extends \Codeception\Test\Unit
         $oCommonHelper->expects($this->any())->method('getVoidPaymentUrl')->willReturn('url');
         $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(true);
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
-        $oPaymentOperations = new PaymentOperations($oPaymentOperations, $oCommonHelper);
+        $oPaymentOperations = new PaymentOperations($oPaymentOperations, $oCommonHelper, \oxNew(\Es\NetsEasy\ShopExtend\Application\Models\OrderItems::class, null, \oxNew(\Es\NetsEasy\Core\CommonHelper::class)));
         $result = $oPaymentOperations->getOrderRefund();
         $this->assertNull($result);
     }
@@ -144,7 +144,7 @@ class PaymentOperationsTest extends \Codeception\Test\Unit
         $oCommonHelper->expects($this->any())->method('getCurlResponse')->willReturn($response);
         $oCommonHelper->expects($this->any())->method('getPaymentId')->willReturn(true);
         $oCommonHelper->expects($this->any())->method('getApiUrl')->willReturn('url');
-        $oPaymentOperations = new PaymentOperations(null, $oCommonHelper);
+        $oPaymentOperations = new PaymentOperations(null, $oCommonHelper, \oxNew(\Es\NetsEasy\ShopExtend\Application\Models\OrderItems::class, null, \oxNew(\Es\NetsEasy\Core\CommonHelper::class)));
         $result = $oPaymentOperations->getChargeId(100);
         $this->assertNotEmpty($result);
     }

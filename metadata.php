@@ -35,6 +35,7 @@ $aModule = [
         \OxidEsales\Eshop\Application\Controller\OrderController::class => \Es\NetsEasy\ShopExtend\Application\Controller\OrderController::class,
         \OxidEsales\Eshop\Application\Controller\PaymentController::class => \Es\NetsEasy\ShopExtend\Application\Controller\PaymentController::class,
         \OxidEsales\Eshop\Application\Controller\ThankYouController::class => \Es\NetsEasy\ShopExtend\Application\Controller\ThankyouController::class,
+        \OxidEsales\Eshop\Core\ViewConfig::class => \Es\NetsEasy\Api\ReportingApi::class,
     ],
     'blocks' => [
         [
@@ -61,9 +62,20 @@ $aModule = [
             'template' => 'page/checkout/thankyou.tpl',
             'block' => 'checkout_thankyou_info',
             'file' => 'views/blocks/page/checkout/thankyou/checkout_thankyou_info.tpl'
+        ],
+        [
+            'template' => 'module_config.tpl',
+            'block' => 'admin_module_config_form',
+            'file' => 'views/blocks/reporting_api.tpl'
         ]
     ],
     'settings' => [
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_merchant_id',
+            'type' => 'str',
+            'value' => '',
+        ],
         [
             'group' => 'nets_main',
             'name' => 'nets_blMode',
@@ -138,7 +150,8 @@ $aModule = [
             'name' => 'nets_blDebug_log',
             'type' => 'bool',
             'value' => 'false'
-        ]
+        ],
+         
     ],
     'templates' => [],
     'events' => [

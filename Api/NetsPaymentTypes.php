@@ -22,6 +22,7 @@ class NetsPaymentTypes
 
     /**
      * Function to get Nets Payment Type
+     * @param  string $payment_id The payment id
      * @return bool
      */
     public function getNetsPaymentType($payment_id)
@@ -36,6 +37,7 @@ class NetsPaymentTypes
 
     /**
      * Function to get Nets Payment Description
+     * @param  string $payment_id The payment id
      * @return bool
      */
     public function getNetsPaymentDesc($payment_id)
@@ -50,6 +52,7 @@ class NetsPaymentTypes
 
     /**
      * Function to get Nets Payment Short Description
+     * @param  string $payment_id The payment id
      * @return bool
      */
     public function getNetsPaymentShortDesc($payment_id)

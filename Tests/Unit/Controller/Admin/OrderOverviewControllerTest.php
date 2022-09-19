@@ -18,12 +18,14 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
      * @var \UnitTester
      */
     protected $oOrderOverviewController;
+    protected $oCommonHelper;
 
     protected function setUp(): void
     {
         parent::setUp();
         include_once dirname(__FILE__) . "/../../../../../../../bootstrap.php";
         $this->oOrderOverviewController = \oxNew(OrderOverviewController::class);
+        $this->oCommonHelper = \oxNew(CommonHelper::class);
     }
 
     /**
@@ -36,7 +38,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
         $oOrderOverview = $this->getMockBuilder(OrderOverview::class)->setMethods(['getPaymentMethod'])->getMock();
         $oOrderOverview->expects($this->any())->method('getPaymentMethod')->willReturn('nets_easy');
 
-        $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->setMethods(['getEasyStatus'])->getMock();
+        $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->disableOriginalConstructor()->setMethods(['getEasyStatus'])->getMock();
         $oPaymentStatus->expects($this->any())->method('getEasyStatus')->willReturn([
             'payStatus' => 'reserved',
             'langStatus' => 'en'
@@ -52,7 +54,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
      */
     public function testGetPayLangStatus()
     {
-        $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->setMethods(['getPaymentStatus'])->getMock();
+        $oPaymentStatus = $this->getMockBuilder(PaymentStatus::class)->disableOriginalConstructor()->setMethods(['getPaymentStatus'])->getMock();
         $oPaymentStatus->expects($this->any())->method('getPaymentStatus')->willReturn(true);
         $oOrderOverview = new OrderOverviewController(null, null, null, null, null, $oPaymentStatus);
         $result = $oOrderOverview->getPayLangStatus(100, 100);
@@ -65,7 +67,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
 
     public function testGetOrderCharged()
     {
-        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->setMethods(['getOrderCharged'])->getMock();
+        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->disableOriginalConstructor()->setMethods(['getOrderCharged'])->getMock();
         $oPaymentOperations->expects($this->any())->method('getOrderCharged')->willReturn(1);
         $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);
@@ -84,7 +86,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
 
     public function testGetOrderRefund()
     {
-        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->setMethods(['getOrderRefund'])->getMock();
+        $oPaymentOperations = $this->getMockBuilder(PaymentOperations::class)->disableOriginalConstructor()->setMethods(['getOrderRefund'])->getMock();
         $oPaymentOperations->expects($this->any())->method('getOrderRefund')->willReturn(1);
         $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);
@@ -101,7 +103,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
 
     public function testGetOrderCancel()
     {
-        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getOrderItems'])->getMock();
         $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
             'totalAmt' => '100',
             'items' => 'items'
@@ -125,7 +127,7 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
 
     public function testGetOrderItems()
     {
-        $oOrderItems = $this->getMockBuilder(OrderItems::class)->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getOrderItems'])->getMock();
         $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn(true);
         $oOrderOverview = new OrderOverviewController(null, null, null, null, $oOrderItems);
         $result = $oOrderOverview->getOrderItems(100);
@@ -287,7 +289,8 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
             $this->assertStringStartsWith('http', $result);
             $this->assertNotNull($result);
         }
-        Registry::getConfig()->setConfigParam('nets_blMode', 1);
+        $oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
+        $oxConfig->setConfigParam('nets_blMode', 1);
         $result = $this->oOrderOverviewController->getApiUrl();
         $this->assertNotEmpty($result);
     }
@@ -337,11 +340,17 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
      */
     public function getNetsOrderId()
     {
-        $oDB = \OxidEsales\Eshop\Core\DatabaseProvider::getDb(true);
-        $sSQL_select = "SELECT oxid FROM oxorder WHERE  OXPAYMENTTYPE= ? LIMIT 1";
-        return $orderId = $oDB->getOne($sSQL_select, [
-            'nets_easy'
+        $queryBuilder = ContainerFactory::getInstance()
+                        ->getContainer()
+                        ->get(QueryBuilderFactoryInterface::class)->create();
+        $queryBuilder
+                ->select('oxid')
+                ->from('oxorder')
+                ->where('OXPAYMENTTYPE = :OXPAYMENT_TYPE')
+                ->setParameters([
+                    'OXPAYMENT_TYPE' => 'nets_easy',
         ]);
+        return $queryBuilder->execute()->fetchOne();
     }
 
     /**
