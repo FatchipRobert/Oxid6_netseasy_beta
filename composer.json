@@ -13,6 +13,9 @@
       "target-directory": "es/esnetseasy"
     }
   },
+  "require": {
+    "php": ">=7.0"
+  },
   "autoload-dev": {
     "psr-4": {
       "Es\\NetsEasy\\": "../../../source/modules/es/esnetseasy"      
