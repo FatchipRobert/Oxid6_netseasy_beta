@@ -178,6 +178,25 @@ class OrderItems
             'oxbprice' => $item->oxorder__oxpaycost->rawValue
         ];
     }
+ /*
+     * Function to get shopping cost
+     * @return array
+     */
+
+    public function getShippingCost($item) {
+        return [
+            'reference' => 'shipping',
+            'name' => 'shipping',
+            'quantity' => 1,
+            'unit' => 'units',
+            'unitPrice' => $this->prepareAmount($item->oxorder__oxdelcost->rawValue),
+            'taxRate' => $this->prepareAmount($item->oxorder__oxdelvat->rawValue),
+            'taxAmount' => 0,
+            'grossTotalAmount' => $this->prepareAmount($item->oxorder__oxdelcost->rawValue),
+            'netTotalAmount' => $this->prepareAmount($item->oxorder__oxdelcost->rawValue),
+            'oxbprice' => $item->oxorder__oxdelcost->rawValue
+        ];
+    }
 
     /*
      * Function to prepare amount
