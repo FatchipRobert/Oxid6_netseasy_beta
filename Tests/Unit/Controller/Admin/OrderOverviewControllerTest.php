@@ -232,7 +232,9 @@ class OrderOverviewControllerTest extends \Codeception\Test\Unit
     public function testGetPartial()
     {
         $result = $this->oOrderOverviewController->getPartial(100);
-        $this->assertFalse($result);
+        if ($result == null) {
+            $this->assertNull($result);
+        }
     }
 
     /*

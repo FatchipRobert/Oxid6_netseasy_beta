@@ -1,23 +1,26 @@
 namespace: Es\NetsEasy\Tests\Codeception
 params:
-    - Codeception/config/params.php
+  - Codeception/Config/params.php
 paths:
-    tests: source\modules\es\esnetseasy\ShopExtend
-    output: Codeception/_output
-    data: Codeception/_data
-    support: Codeception/_support
-    envs: Codeception/_envs
-actor_suffix: Tester
-bootstrap: _bootstrap.php
+  tests: source/modules/es/esnetseasy/Tests
+  output: Codeception/_output
+  data: Codeception/_data
+  support: Codeception/_support
+  envs: Codeception/_envs
+  actor_suffix: Tester
+
 settings:
-    colors: true
-    log: true
+  colors: true
+  log: true
+
 extensions:
-    enabled:
-        - Codeception\Extension\RunFailed
+  enabled:
+    - Codeception\Extension\RunFailed
 coverage:
     enabled: true
     include:
         - source/modules/es/esnetseasy/ShopExtend/*
+        - source/modules/es/esnetseasy/Core/*
+        - source/modules/es/esnetseasy/Api/*
     exclude:
-        - source/modules/es/esnetseasy/Tests/*   
+        - source/modules/es/esnetseasy/Tests/*

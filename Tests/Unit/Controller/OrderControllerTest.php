@@ -88,8 +88,9 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $this->oxSession->setVariable('payment_id', '0230000062a996e863308f63c7333a01');
         $this->oxConfig->setConfigParam('nets_autocapture', 1);
 
-        $oOrder = $this->getMockBuilder(NetsOrder::class)->disableOriginalConstructor()->setMethods(['savePaymentDetails'])->getMock();
+        $oOrder = $this->getMockBuilder(NetsOrder::class)->disableOriginalConstructor()->setMethods(['savePaymentDetails','updateOrdernr'])->getMock();
         $oOrder->expects($this->any())->method('savePaymentDetails')->willReturn(1);
+        $oOrder->expects($this->any())->method('updateOrdernr')->willReturn(1);
 
         $mockBuilder = $this->getMockBuilder(Registry::class);
         $mockBuilder->setMethods(['redirect']);

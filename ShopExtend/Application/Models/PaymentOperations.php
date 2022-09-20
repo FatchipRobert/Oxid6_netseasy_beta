@@ -83,7 +83,7 @@ class PaymentOperations
                 'orderItems' => $data['items']
             ];
         }
-		
+
         $this->oDebugHandler->log("Nets_Order_Overview" . json_encode($body));
         $api_return = $this->oCommonHelper->getCurlResponse($chargeUrl, 'POST', json_encode($body));
         $response = json_decode($api_return, true);
@@ -174,7 +174,7 @@ class PaymentOperations
         $oxorder = Request::getRequestParameter('oxorderid');
         $orderno = Request::getRequestParameter('orderno');
         $data = $this->oOrderItems->getOrderItems($oxorder);
-		$payment_id = $this->oCommonHelper->getPaymentId($oxorder);
+        $payment_id = $this->oCommonHelper->getPaymentId($oxorder);
 
         $oCommonHelper = new CommonHelper();
         $api_return = $oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $payment_id, 'GET');
@@ -183,7 +183,7 @@ class PaymentOperations
         $chargeResponse = $this->paymentOPObject->getChargeId($oxorder);
         $ref = Request::getRequestParameter('reference');
         $refundQty = Request::getRequestParameter('refund');
-        
+
         $refundEachQtyArr = [];
         $breakloop = false;
         $cnt = 1;

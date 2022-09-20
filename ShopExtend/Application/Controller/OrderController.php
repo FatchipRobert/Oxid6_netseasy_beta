@@ -85,9 +85,9 @@ class OrderController extends OrderController_parent
      * @return Null
      */
     public function execute()
-    {		
+    {
         if ($this->oxSession->getVariable("paymentid") == "nets_easy") {
-            $this->oDebugHandler->log("NetsOrderController, execute");			
+            $this->oDebugHandler->log("NetsOrderController, execute");
             $oUser = $this->getUser();
             if ($this->oxBasket->getProductsCount()) {
                 try {
@@ -138,11 +138,11 @@ class OrderController extends OrderController_parent
     public function returnhosted()
     {
         $paymentId = $this->oxSession->getVariable('payment_id');
-		$orderNo = $this->oxSession->getVariable('orderNr');
+        $orderNo = $this->oxSession->getVariable('orderNr');
         $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
         $api_ret = json_decode($chargeResponse, true);
         $this->payment->savePaymentDetails($api_ret, $paymentId);
-		$this->oNetsOrder->updateOrdernr(null,$orderNo);		
+        $this->oNetsOrder->updateOrdernr(null, $orderNo);
         return $this->oxUtils->redirect($this->oxConfig
                                 ->getSslShopUrl() . 'index.php?cl=thankyou&paymentid=' . $paymentId);
     }

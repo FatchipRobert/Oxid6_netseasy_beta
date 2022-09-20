@@ -163,6 +163,31 @@ class OrderItemsTest extends \Codeception\Test\Unit
         $this->assertNotEmpty($result);
     }
 
+	/*
+     * Test case to get pay cost items
+     */
+
+    public function testGetShippingCost()
+    {
+        $oOrderItems = $this->getMockBuilder(OrderItems::class)->disableOriginalConstructor()->setMethods(['getOrderItems'])->getMock();
+        $oOrderItems->expects($this->any())->method('getOrderItems')->willReturn([
+            'reference' => '1205',
+            'name' => 'ABC',
+            'quantity' => 1,
+            'unit' => 'units',
+            'unitPrice' => 10000,
+            'taxRate' => 2500,
+            'taxAmount' => 250,
+            'grossTotalAmount' => 12500,
+            'netTotalAmount' => 10000,
+            'oxbprice' => 10000
+        ]);
+        $oOrderItems->oxorder__oxpaycost = new Field(true);
+        $oOrderItems->oxorder__oxpayvat = new Field(true);
+        $orderItemsObj = new OrderItems($oOrderItems, $this->oCommonHelper);
+        $result = $orderItemsObj->getShippingCost($oOrderItems);
+        $this->assertNotEmpty($result);
+    }
     /*
      * Test case to prepare amount
      */

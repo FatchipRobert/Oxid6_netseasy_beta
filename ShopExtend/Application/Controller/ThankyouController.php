@@ -18,11 +18,11 @@ class ThankyouController extends ThankyouController_parent
      * @return string paymentId
      */
     public function getPaymentId($oOrder = null)
-    {	
-		$oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
-		$oxSession->deleteVariable('payment_id');
-		$oxSession->deleteVariable('sess_challenge');
-		$oxSession->deleteVariable('orderNr');
+    {
+        $oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
+        $oxSession->deleteVariable('payment_id');
+        $oxSession->deleteVariable('sess_challenge');
+        $oxSession->deleteVariable('orderNr');
         if ($oOrder) {
             $oOrder = $oOrder->getOrder();
         } else {

@@ -20,15 +20,7 @@
 ### Download / Installation
 1] Install Nets Plugin:
 
-    Run command: composer require nets-ecom/oxid6_netseasy_beta
-
-    Add below lines of code in composer.json file
-
-    "psr-4": {
-                "Es\\NetsEasy\\":"./source/modules/es/esnetseasy"
-            }
-
-    Run command: composer dump-autoload
+    Run command: composer require nets-ecom/oxid6_netseasy_beta    
 
 2] Activate the Nets module:
 
@@ -44,12 +36,12 @@
 4] To execute codeception on correct test folder: add or update below lines of code in codeception.yml file.
 
     paths:
-        test:source/modules/es/esnetseasy/Tests
+        tests: source/modules/es/esnetseasy/Tests
     coverage:
         enabled: true
         includeUncoveredFiles: false
         include:
-            - source/modules/es/esnetseasy/extend/*
+            - source/modules/es/esnetseasy/ShopExtend/*
             - source/modules/es/esnetseasy/Core/*
             - source/modules/es/esnetseasy/Api/*
         exclude:

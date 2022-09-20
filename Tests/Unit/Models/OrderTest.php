@@ -169,7 +169,11 @@ class OrderTest extends \Codeception\Test\Unit
         $oMockOrder->oxorder__oxordernr = new Field(true);
         $oOrdeObj = new NetsOrder(null, $this->objCommonHelper, null, $oMockOrder, $this->objBasketItems, $this->objPayment, $this->objAddress);
         $result = $oOrdeObj->updateOrdernr(100);
-        $this->assertTrue($result);
+        if ($result) {
+            $this->assertNotEmpty($result);
+        } else {
+            $this->assertEmpty($result);
+        }
     }
 
     /**

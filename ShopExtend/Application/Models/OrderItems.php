@@ -178,12 +178,13 @@ class OrderItems
             'oxbprice' => $item->oxorder__oxpaycost->rawValue
         ];
     }
- /*
+	/*
      * Function to get shopping cost
      * @return array
      */
 
     public function getShippingCost($item) {
+		
         return [
             'reference' => 'shipping',
             'name' => 'shipping',
