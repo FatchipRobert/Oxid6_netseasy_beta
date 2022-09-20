@@ -38,8 +38,10 @@ class CommonHelperTest extends \Codeception\Test\Unit
     public function testGetPaymentId()
     {
         $result = $this->oNetsCommonHelper->getPaymentId(100);
-        if ($result == null) {
-            $this->assertNull($result);
+        if ($result) {
+            $this->assertNotEmpty($result);
+        } else {
+            $this->assertEmpty($result);
         }
     }
 
