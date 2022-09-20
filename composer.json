@@ -15,7 +15,7 @@
   },
   "autoload-dev": {
     "psr-4": {
-      "Es\\NetsEasy\\": "./"      
+      "Es\\NetsEasy\\": "../../../source/modules/es/esnetseasy"      
     }
   }
 }
