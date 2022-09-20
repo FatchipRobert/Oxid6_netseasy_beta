@@ -83,6 +83,7 @@ class PaymentOperations
                 'orderItems' => $data['items']
             ];
         }
+		
         $this->oDebugHandler->log("Nets_Order_Overview" . json_encode($body));
         $api_return = $this->oCommonHelper->getCurlResponse($chargeUrl, 'POST', json_encode($body));
         $response = json_decode($api_return, true);
@@ -109,7 +110,7 @@ class PaymentOperations
                                 'charge_left_qty' => '?'
                             )
                     )
-                    ->setParameter(0, $paymentId)
+                    ->setParameter(0, $payment_id)
                     ->setParameter(1, $response['chargeId'])
                     ->setParameter(2, $ref)
                     ->setParameter(3, $chargeQty)
@@ -173,15 +174,16 @@ class PaymentOperations
         $oxorder = Request::getRequestParameter('oxorderid');
         $orderno = Request::getRequestParameter('orderno');
         $data = $this->oOrderItems->getOrderItems($oxorder);
+		$payment_id = $this->oCommonHelper->getPaymentId($oxorder);
 
         $oCommonHelper = new CommonHelper();
-        $api_return = $oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $this->oCommonHelper->getPaymentId($oxorder), 'GET');
+        $api_return = $oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $payment_id, 'GET');
         $response = json_decode($api_return, true);
 
         $chargeResponse = $this->paymentOPObject->getChargeId($oxorder);
         $ref = Request::getRequestParameter('reference');
         $refundQty = Request::getRequestParameter('refund');
-        $payment_id = $this->oCommonHelper->getPaymentId($oxorder);
+        
         $refundEachQtyArr = [];
         $breakloop = false;
         $cnt = 1;

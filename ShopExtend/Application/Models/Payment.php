@@ -89,7 +89,7 @@ class Payment
         }
         $this->oDebugHandler->log("NetsOrder, api return data create trans: " . json_decode($api_return, true));
         // create entry in oxnets table for transaction
-        $this->oPaymentGateway->createTransactionEntry(json_encode($data), $api_return, $this->getOrderId(), $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
+        $this->oPaymentGateway->createTransactionEntry(json_encode($data), $api_return, $oID, $response['paymentId'], $oID, intval(strval($oBasket->getPrice()->getBruttoPrice() * 100)));
         // Set language for hosted payment page
         $language = Registry::getLang()->getLanguageAbbr();
         if ($language == 'en') {

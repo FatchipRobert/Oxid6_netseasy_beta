@@ -32,9 +32,9 @@
 
 2] Activate the Nets module:
 
-    vendor/bin/oe-console oe:module:install .\source\modules\es\esnetseasy
+    vendor/bin/oe-console oe:module:install ./source/modules/es/esnetseasy
     vendor/bin/oe-console oe:module:activate esnetseasy
-    vendor/bin/oe-console oe:module:install-configuration .\source\modules\es\esnetseasy
+    vendor/bin/oe-console oe:module:install-configuration ./source/modules/es/esnetseasy
     vendor/bin/oe-console oe:module:apply-configuration
 
 3] Initialize Codeception:
@@ -67,7 +67,7 @@
 
 7] Generate code coverage report by executing below command.
 
-    .\vendor\bin\codecept run --coverage --coverage-xml --coverage-html
+    ./vendor/bin/codecept run --coverage --coverage-xml --coverage-html
     
 8] Congratulation code coverage looks like below.
     ![Alt text](code-coverage-report.JPG?raw=true "Title")

@@ -92,7 +92,7 @@ class Order
      * @throws \OxidEsales\Eshop\Core\Exception\DatabaseConnectionException
      * @return bool
      */
-    public function createNetsTransaction($oOrder)
+    public function createNetsTransaction($oxOrder)
     {
         $this->oxSession->deleteVariable('nets_err_msg');
         $this->oDebugHandler->log("NetsOrder createNetsTransaction");
@@ -104,8 +104,14 @@ class Order
         $sCountryId = $oUser->oxuser__oxcountryid->value;
         $mySession = $this->oxSession;
         $oBasket = $mySession->getBasket();
+		if (isset($oxOrder->oxorder__oxordernr->value)) {
+				$orderNr = $oxOrder->oxorder__oxordernr->value;				
+				$this->oxSession->setVariable('orderNr', $orderNr);
+				$this->oxSession->setVariable('sess_challenge', $oxOrder->oxorder__oxid->value);
+				
+		}
         $oID = $this->oxSession->getVariable('sess_challenge');
-        $this->oOrder->updateOrdernr($oID);
+        
         $daten = $this->oxAddress->setAddress($oUser, $sTranslation = '', $oBasket);
         $basketcontents = $oBasket->getContents();
         $this->oxBasketItems->getItemList($oBasket);
@@ -128,7 +134,7 @@ class Order
             $sumAmt += $itemArray['grossTotalAmount'];
         }
         $sumAmt = $sumAmt + $wrapCost + $greetCardAmt + $shipCostAmt + $payCostAmt;
-        $daten['delivery_address'] = $this->oxAddress->getDeliveryAddress($oOrder, $oDB = null, $oUser);
+        $daten['delivery_address'] = $this->oxAddress->getDeliveryAddress($oxOrder, $oDB = null, $oUser);
         // create order to be passed to nets api
         $data = [
             'order' => [
@@ -139,8 +145,8 @@ class Order
             ]
         ];
         $data = $this->oxPayment->prepareDatastringParams($daten, $data, $paymentId = null);
-        try {
-            return $this->oxPayment->getPaymentResponse($data, $oBasket, $oID);
+        try {			
+            return $this->oxPayment->getPaymentResponse($data, $oBasket, $oID);			
         } catch (Exception $e) {
             $this->oOrder->logCatchErrors($e);
             Registry::getUtils()->redirect($this->oxConfig
@@ -172,7 +178,7 @@ class Order
      */
     public function processOrder($oUser)
     {
-        $sess_id = $this->oxSession->getVariable('sess_challenge');
+		$sess_id = $this->oxSession->getVariable('sess_challenge');
         $queryBuilder = $this->queryBuilder->create();
         $queryBuilder
                 ->select('oxorder_id')
@@ -192,29 +198,10 @@ class Order
         $_POST['sDeliveryAddressMD5'] = $sDeliveryAddress;
         $iSuccess = $this->oxOrder->finalizeOrder($oBasket, $oUser);
         $paymentId = $this->oxSession->getVariable('payment_id');
-        $orderNr = null;
-        if (isset($this->oxOrder->oxorder__oxordernr->value)) {
-            $orderNr = $this->oxOrder->oxorder__oxordernr->value;
-            $this->oDebugHandler->log(" refupdate NetsOrder, order nr" . $this->oxOrder->oxorder__oxordernr->value);
-            $this->oxSession->setVariable('orderNr', $orderNr);
-        }
-        $queryBuilder = $this->queryBuilder->create();
-        $queryBuilder
-                ->update('oxnets', 'o')
-                ->set('o.oxordernr', '?')
-                ->set('o.hash', '?')
-                ->set('o.oxorder_id', '?')
-                ->where('o.transaction_id = ?')
-                ->setParameter(0, $orderNr)
-                ->setParameter(1, $this->oxSession->getVariable('sess_challenge'))
-                ->setParameter(2, $this->oxSession->getVariable('sess_challenge'))
-                ->setParameter(3, $paymentId)
-        ;
-        $queryData = $queryBuilder->execute();
-
+        $this->oOrder->updateOrdernr($this->oxOrder,$orderNr=null);
         $api_return = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, "GET");
         $response = json_decode($api_return, true);
-        $this->oDebugHandler->log(" payment api status NetsOrder, response", $response);
+        $this->oDebugHandler->log(" payment api status NetsOrder, response". $response);
         $refUpdate = [
             'reference' => $orderNr,
             'checkoutUrl' => $response['payment']['checkout']['url']
@@ -259,31 +246,35 @@ class Order
      * @param string The OXID Order hash string
      * @return int $oOrderrnr
      */
-    public function updateOrdernr($hash)
+    public function updateOrdernr($oxOrder,$orderNr=null)
     {
-        $oID = $this->oxSession->getVariable("sess_challenge");
-        $this->oxOrder->load($oID);
-        $oOrdernr = $this->oxOrder->oxorder__oxordernr->value;
-        $this->oDebugHandler->log("NetsOrder, updateOrdernr: " . $oOrdernr . " for hash " . $hash);
         $paymentId = $this->oxSession->getVariable('payment_id');
-        if (!empty($oOrdernr) && !empty($hash)) {
-            $queryBuilder = $this->queryBuilder->create();
-            $queryBuilder
-                    ->update('oxnets', 'o')
-                    ->set('o.oxordernr', '?')
-                    ->set('o.hash', '?')
-                    ->set('o.oxorder_id', '?')
-                    ->where('o.transaction_id = ?')
-                    ->setParameter(0, $oOrdernr)
-                    ->setParameter(1, $hash)
-                    ->setParameter(2, $oID)
-                    ->setParameter(3, $paymentId)
-            ;
-            $queryData = $queryBuilder->execute();
-
-            $this->oDebugHandler->log("NetsOrder, in if updateOrdernr: " . $oOrdernr . " for hash " . $hash);
-        }
-        return $oOrdernr;
+		$queryBuilder = $this->queryBuilder->create();	
+				
+        if (isset($oxOrder->oxorder__oxordernr->value)) {
+            $orderNr = $oxOrder->oxorder__oxordernr->value;
+            $this->oDebugHandler->log(" refupdate NetsOrder, order nr" . $oxOrder->oxorder__oxordernr->value);
+            $this->oxSession->setVariable('orderNr', $orderNr);
+			$queryBuilder
+                ->update('oxnets', 'o')
+                ->set('o.oxordernr', '?')
+                ->set('o.hash', '?')
+                ->set('o.oxorder_id', '?')
+                ->where('o.transaction_id = ?')
+                ->setParameter(0, $orderNr)
+                ->setParameter(1, $this->oxSession->getVariable('sess_challenge'))
+                ->setParameter(2, $this->oxSession->getVariable('sess_challenge'))
+                ->setParameter(3, $paymentId);        
+        }else{
+			$queryBuilder
+                ->update('oxnets', 'o')
+                ->set('o.oxordernr', '?')                
+                ->where('o.transaction_id = ?')
+                ->setParameter(0, $orderNr)                
+                ->setParameter(1, $paymentId);
+		}  
+		return  $queryBuilder->execute();
+		
     }
 
     /**

@@ -111,7 +111,8 @@ final class Version20220126151019 extends AbstractMigration
             }
         }
         //activate payment
-        $active = $this->oxSession->getVariable('activeStatus');
+		$oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
+        $active = $oxSession->getVariable('activeStatus');
         $queryBuilder = ContainerFactory::getInstance()->getContainer()->get(QueryBuilderFactoryInterface::class)->create();
         $queryBuilder
                 ->update('oxpayments', 'o')

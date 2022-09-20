@@ -13,9 +13,9 @@
       "target-directory": "es/esnetseasy"
     }
   },
-  "autoload": {
+  "autoload-dev": {
     "psr-4": {
-      "Es\\NetsEasy\\": "./source/modules/es/esnetseasy"      
+      "Es\\NetsEasy\\": "./"      
     }
   }
 }
