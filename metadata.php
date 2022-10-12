@@ -1,109 +1,162 @@
 <?php
 
-namespace Es\NetsEasy\ShopExtend\Application\Models;
-
-use Es\NetsEasy\Api\NetsPaymentTypes;
-use Es\NetsEasy\Api\NetsLog;
-use OxidEsales\EshopCommunity\Core\Registry;
-use Es\NetsEasy\Core\DebugHandler;
-use \OxidEsales\EshopCommunity\Internal\Container\ContainerFactory;
-use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryInterface;
+/**
+ * Nets Oxid Payment module metadata
+ *
+ * @version 2.0.0
+ * @package Nets
+ * @copyright nets
+ */
+/**
+ * Metadata version
+ */
+$sMetadataVersion = '2.1';
 
 /**
- * Class defines execution of nets payment.
+ * Module information
  */
-class PaymentGateway extends PaymentGateway_parent
-{
-
-    protected $netsPaymentTypes;
-
-    /**
-     * Function to execute Nets payment.
-     * @param int $dAmount The order item amount
-     * @param object $oOrder The OXID Order object
-     * @return bool
-     */
-    public function executePayment($dAmount, &$oOrder)
-    {
-        $oxConfig = \oxNew(\OxidEsales\EshopCommunity\Core\Config::class);
-        $oxSession = \oxNew(\OxidEsales\EshopCommunity\Core\Session::class);
-        $oDebugHandler = \oxNew(DebugHandler::class);
-        $this->netsPaymentTypes = \oxNew(NetsPaymentTypes::class);
-        $ox_payment_id = $oxSession->getBasket()->getPaymentId();
-        $payment_type = $this->netsPaymentTypes->getNetsPaymentType($ox_payment_id);
-        $oDebugHandler->log("NetsPaymentGateway executePayment: " . $payment_type);
-        if ((!isset($payment_type) || !$payment_type) && $dAmount != 'test') { 
-            $oDebugHandler->log("NetsPaymentGateway executePayment, parent");
-            return parent::executePayment($dAmount, $oOrder);
-        }
-        $oDebugHandler->log("NetsPaymentGateway executePayment");
-        $success = true;
-        $oxSession->deleteVariable('nets_success');
-        if (isset($success) && $success === true) {
-            $oDebugHandler->log("NetsPaymentGateway executePayment - success");
-            return true;
-        }
-        $oDebugHandler->log("NetsPaymentGateway executePayment - failure");
-        return false;
-    }
-
-    /**
-     * Function to create transaction id in db
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
-     * @param array $req_data The API request array
-     * @param array $ret_data The API return array
-     * @param string $hash The Order hash
-     * @param string $payment_id The NETS payment ID
-     * @param string $oxorder_id The Order ID
-     * @param int $amount The order item amount
-     * @return Null
-     */
-    public function createTransactionEntry($req_data, $ret_data, $hash, $payment_id, $oxorder_id, $amount)
-    {
-        $queryBuilder = ContainerFactory::getInstance()->getContainer()->get(QueryBuilderFactoryInterface::class)->create();
-        $queryBuilder->insert('oxnets')
-                ->values(
-                        array(
-                            'req_data' => '?',
-                            'ret_data' => '?',
-                            'transaction_id' => '?',
-                            'oxordernr' => '?',
-                            'oxorder_id' => '?',
-                            'amount' => '?',
-                            'created' => '?'
-                        )
-                )
-                ->setParameter(0, $req_data)
-                ->setParameter(1, $ret_data)
-                ->setParameter(2, $payment_id)
-                ->setParameter(3, $oxorder_id)
-                ->setParameter(4, $hash)
-                ->setParameter(5, $amount)
-                ->setParameter(6, date('Y-m-d'))->execute();
-    }
-
-    /**
-     * Function to set transaction id in db
-     * @throws \OxidEsales\Eshop\Core\Exception\DatabaseErrorException
-     * @param string $hash The Order hash
-     * @param string $transaction_id The NETS transaction ID
-     * @param bool $log_error The NETS API errors
-     * @return Null
-     */
-    public function setTransactionId($hash, $transaction_id, $log_error = false)
-    {
-        if (!empty($hash) & !empty($transaction_id)) {
-            $queryBuilder = ContainerFactory::getInstance()->getContainer()->get(QueryBuilderFactoryInterface::class)->create();
-            $queryBuilder
-                    ->update('oxnets', 'o')
-                    ->set('o.transaction_id', '?')
-                    ->where('o.transaction_id = ?')
-                    ->andWhere('o.hash = ?')
-                    ->setParameter(0, $transaction_id)->setParameter(1, null)->setParameter(2, $hash)->execute();
-        } else {
-            $oDebugHandler = \oxNew(DebugHandler::class);
-            $oDebugHandler->log('nets_api, hash or transaction_id empty');
-        }
-    }
-
-}
+$aModule = [
+    'id' => 'esnetseasy',
+    'title' => 'Nets Easy',
+    'version' => '2.0.0',
+    'author' => 'Nets eCom',
+    'url' => 'http://www.nets.eu',
+    'email' => 'https://www.nets.eu/contact-nets/Pages/Customer-service.aspx',
+    'thumbnail' => 'out/src/img/nets_logo.png',
+    'description' => [
+        'de' => 'Nets einfach sicher zahlen',
+        'en' => 'Nets safe online payments'
+    ],
+    'controllers' => [
+        'nets_order_overview' => \Es\NetsEasy\ShopExtend\Application\Controller\Admin\OrderOverviewController::class
+    ],
+    'extend' => [
+        \OxidEsales\Eshop\Application\Controller\Admin\OrderOverview::class => \Es\NetsEasy\ShopExtend\Application\Controller\Admin\OrderOverviewController::class,
+        \OxidEsales\Eshop\Application\Controller\OrderController::class => \Es\NetsEasy\ShopExtend\Application\Controller\OrderController::class,
+        \OxidEsales\Eshop\Application\Controller\PaymentController::class => \Es\NetsEasy\ShopExtend\Application\Controller\PaymentController::class,
+        \OxidEsales\Eshop\Application\Controller\ThankYouController::class => \Es\NetsEasy\ShopExtend\Application\Controller\ThankyouController::class,
+        \OxidEsales\Eshop\Core\ViewConfig::class => \Es\NetsEasy\Api\ReportingApi::class,
+        \OxidEsales\Eshop\Application\Model\PaymentGateway::class             => \Es\NetsEasy\ShopExtend\Application\Models\PaymentGateway::class,
+    ],
+    'blocks' => [
+        [
+            'template' => 'order_overview.tpl',
+            'block' => 'admin_order_overview_export',
+            'file' => 'views/blocks/admin_order_overview_export.tpl'
+        ],
+        [
+            'template' => 'page/checkout/payment.tpl',
+            'block' => 'select_payment',
+            'file' => 'views/blocks/page/checkout/payment/select_payment.tpl'
+        ],
+        [
+            'template' => 'page/checkout/order.tpl',
+            'block' => 'shippingAndPayment',
+            'file' => 'views/blocks/page/checkout/order/shippingAndPayment.tpl'
+        ],
+        [
+            'template' => 'page/checkout/order.tpl',
+            'block' => 'checkout_order_errors',
+            'file' => 'views/blocks/page/checkout/order/checkout_order_errors.tpl'
+        ],
+        [
+            'template' => 'page/checkout/thankyou.tpl',
+            'block' => 'checkout_thankyou_info',
+            'file' => 'views/blocks/page/checkout/thankyou/checkout_thankyou_info.tpl'
+        ],
+        [
+            'template' => 'module_config.tpl',
+            'block' => 'admin_module_config_form',
+            'file' => 'views/blocks/reporting_api.tpl'
+        ]
+    ],
+    'settings' => [
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_merchant_id',
+            'type' => 'str',
+            'value' => '',
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_blMode',
+            'type' => 'select',
+            'value' => '0',
+            'constraints' => '0|1'
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_secret_key_live',
+            'type' => 'str',
+            'value' => ''
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_checkout_key_live',
+            'type' => 'str',
+            'value' => ''
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_secret_key_test',
+            'type' => 'str',
+            'value' => ''
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_checkout_key_test',
+            'type' => 'str',
+            'value' => ''
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_terms_url',
+            'type' => 'str',
+            'value' => 'https://mysite.com/index.php?cl=content&oxloadid=oxagb'
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_merchant_terms_url',
+            'type' => 'str',
+            'value' => 'https://cdn.dibspayment.com/terms/easy/terms_of_use.pdf'
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_payment_url',
+            'type' => 'str',
+            'value' => 'http://easymoduler.dk/icon/img?set=2&icons=VISA_MC_MTRO_PP_RP'
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_checkout_mode',
+            'type' => 'select',
+            'value' => 'hosted',
+            'constraints' => 'embedded|hosted'
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_layout_mode',
+            'type' => 'select',
+            'value' => 'layout_1',
+            'constraints' => 'layout_1|layout_2'
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_autocapture',
+            'type' => 'bool',
+            'value' => 'false'
+        ],
+        [
+            'group' => 'nets_main',
+            'name' => 'nets_blDebug_log',
+            'type' => 'bool',
+            'value' => 'false'
+        ],
+         
+    ],
+    'templates' => [],
+    'events' => [
+        'onActivate' => '\Es\NetsEasy\Core\Events::onActivate',
+        'onDeactivate' => '\Es\NetsEasy\Core\Events::onDeactivate'
+    ]
+];
