@@ -113,10 +113,31 @@ class Order
 
         $daten = $this->oxAddress->setAddress($oUser, $sTranslation = '', $oBasket);
         $basketcontents = $oBasket->getContents();
-        $this->oxBasketItems->getItemList($oBasket);
-        /* gift wrap and greeting card amount to be added in total amount */
+        
+        $totalAmountSum = $productAmountSum = $shippingCostAmount = $paymentCostAmount = $discountAmount = $wrapCost = $greetCardAmt =  0;
+        foreach ($basketcontents as $item) {
+            $items[] = $itemArray = $this->oxBasketItems->getProductItem($item);
+            $productAmountSum += $itemArray['grossTotalAmount'];
+        }
+
+        $shippingItemArray = $this->oxBasketItems->getItemList($oBasket);
+        foreach ($shippingItemArray as $itemArray) {
+            if (!empty($itemArray)) {
+                $items[] = $itemArray;                
+                    if ($itemArray['reference'] === 'shipping') {
+                         $shippingCostAmount = (isset($itemArray['grossTotalAmount'])) ? $itemArray['grossTotalAmount'] : '';
+                    }
+                    if ($itemArray['reference'] == 'payment costs') {
+                        $paymentCostAmount = (isset($itemArray['grossTotalAmount'])) ? $itemArray['grossTotalAmount'] : '';
+                    }
+                    if ($itemArray['reference'] === 'discount') {
+                        $discountAmount = (isset($itemArray['grossTotalAmount'])) ? $itemArray['grossTotalAmount'] : '';
+                    }
+                
+            }
+        }
         $wrappingCostAmt = $oBasket->getCosts('oxwrapping');
-        $wrapCost = $greetCardAmt = $shipCostAmt = $payCostAmt = 0;
+         
         if ($wrappingCostAmt) {
             $wrapCost = $oBasket->isCalculationModeNetto() ? $wrappingCostAmt->getNettoPrice() : $wrappingCostAmt->getBruttoPrice();
             $wrapCost = round(round($wrapCost, 2) * 100);
@@ -126,24 +147,27 @@ class Order
             $greetCardAmt = $oBasket->isCalculationModeNetto() ? $greetingCardAmt->getNettoPrice() : $greetingCardAmt->getBruttoPrice();
             $greetCardAmt = round(round($greetCardAmt, 2) * 100);
         }
-        $this->oxBasketItems->getDiscountItem($wrapCost, $greetCardAmt);
-        $sumAmt = 0;
-        foreach ($basketcontents as $item) {
-            $items[] = $itemArray = $this->oxBasketItems->getProductItem($item);
-            $sumAmt += $itemArray['grossTotalAmount'];
+        $giftwrapItemsArray = $this->oxBasketItems->getDiscountItem($wrapCost, $greetCardAmt);
+        foreach ($giftwrapItemsArray as $giftwrapitem) {
+            if (!empty($giftwrapitem)) {
+                $items[] = $giftwrapitem;
+            }
         }
-        $sumAmt = $sumAmt + $wrapCost + $greetCardAmt + $shipCostAmt + $payCostAmt;
+
+        $sumAmt = $productAmountSum + $wrapCost + $greetCardAmt + $shippingCostAmount + $paymentCostAmount;
+        $totalAmountSum = $sumAmt + $discountAmount;
         $daten['delivery_address'] = $this->oxAddress->getDeliveryAddress($oxOrder, $oDB = null, $oUser);
         // create order to be passed to nets api
         $data = [
             'order' => [
                 'items' => $items,
-                'amount' => $sumAmt,
+                'amount' => $totalAmountSum,
                 'currency' => $oBasket->getBasketCurrency()->name,
                 'reference' => $oID
             ]
         ];
         $data = $this->oxPayment->prepareDatastringParams($daten, $data, $paymentId = null);
+        //echo "<pre>";print_r($data);die; 
         try {
             return $this->oxPayment->getPaymentResponse($data, $oBasket, $oID);
         } catch (Exception $e) {

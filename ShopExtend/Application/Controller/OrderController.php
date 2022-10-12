@@ -97,7 +97,7 @@ class OrderController extends OrderController_parent
                         return $this->oxUtils->redirect($this->oxConfig
                                                 ->getSslShopUrl() . 'index.php?cl=thankyou');
                     } else {
-                        $this->getPaymentApiResponse();
+                        $this->getHostedPaymentApiResponse();
                     }
                 } catch (\Exception $e) {
                     Registry::getUtilsView()->addErrorToDisplay($e->getMessage(), false, true, 'basket');
@@ -131,12 +131,42 @@ class OrderController extends OrderController_parent
         return $returnValue;
     }
 
+   /*
+     * Function to get payment api response and pass it to template
+     * @return string payment id
+     */
+
+    public function getHostedPaymentApiResponse()
+    {
+        // additional user check
+        $oUser = $this->getUser();
+        $returnValue = true;
+        if ($this->oxBasket->getProductsCount()) {
+            $oOrder = \oxNew(\OxidEsales\EshopCommunity\Application\Model\Order::class);
+            // performing special actions after user finishes order (assignment to special user groups)
+            if ($oOrder) {
+                $returnValue = $this->oNetsOrder->createNetsTransaction($oOrder);
+            }
+        }
+        return $returnValue;
+    }
+
     /**
      * Function to get return data after hosted payment checkout is done
      * @return null
      */
     public function returnhosted()
     {
+        $oUser = $this->getUser();
+        $oxBasket = $this->oxSession->getBasket();
+        
+        if ($oxBasket->getProductsCount()) {
+            // finalizing ordering process (validating, storing order into DB, executing payment, setting status ...)
+            $sDeliveryAddress = $oUser->getEncodedDeliveryAddress();
+            $_POST['sDeliveryAddressMD5'] = $sDeliveryAddress;
+            $oOrder = \oxNew(\OxidEsales\EshopCommunity\Application\Model\Order::class);
+            $success = $oOrder->finalizeOrder($oxBasket, $oUser);
+        }
         $paymentId = $this->oxSession->getVariable('payment_id');
         $orderNo = $this->oxSession->getVariable('orderNr');
         $chargeResponse = $this->oCommonHelper->getCurlResponse($this->oCommonHelper->getApiUrl() . $paymentId, 'GET');
@@ -146,6 +176,7 @@ class OrderController extends OrderController_parent
         return $this->oxUtils->redirect($this->oxConfig
                                 ->getSslShopUrl() . 'index.php?cl=thankyou&paymentid=' . $paymentId);
     }
+
 
     /*
      * Function to get checkout js url based on environment i.e live or test

@@ -12,7 +12,7 @@ use \OxidEsales\EshopCommunity\Internal\Framework\Database\QueryBuilderFactoryIn
 /**
  * Class defines execution of nets payment.
  */
-class PaymentGateway
+class PaymentGateway extends PaymentGateway_parent
 {
 
     protected $netsPaymentTypes;
@@ -32,7 +32,7 @@ class PaymentGateway
         $ox_payment_id = $oxSession->getBasket()->getPaymentId();
         $payment_type = $this->netsPaymentTypes->getNetsPaymentType($ox_payment_id);
         $oDebugHandler->log("NetsPaymentGateway executePayment: " . $payment_type);
-        if ((!isset($payment_type) || !$payment_type) && $dAmount != 'test') {
+        if ((!isset($payment_type) || !$payment_type) && $dAmount != 'test') { 
             $oDebugHandler->log("NetsPaymentGateway executePayment, parent");
             return parent::executePayment($dAmount, $oOrder);
         }
