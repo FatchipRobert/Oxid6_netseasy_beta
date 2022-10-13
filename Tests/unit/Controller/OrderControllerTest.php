@@ -65,7 +65,35 @@ class OrderControllerTest extends \Codeception\Test\Unit
         $order->expects($this->any())->method('isEmbedded')->willReturn(0);
         $result = $oOrderOverview->execute();
     }
+    
+    /**
+     * Test case for OrderController::execute()
+     */
+    public function testGetHostedPaymentApiResponse()
+    {
+         
+        $order = $this->getMockBuilder(NetsOrder::class)
+                ->disableOriginalConstructor()->setMethods(['createNetsTransaction'])
+                ->getMock();
 
+        $order->expects($this->any())->method('createNetsTransaction')->willReturn(1);
+         
+
+        $user = $this->getMockBuilder(User::class)->setMethods(['getType', 'onOrderExecute'])->getMock();
+        $user->expects($this->any())->method('getType')->willReturn(0);
+        $basket = $this->getMockBuilder(\OxidEsales\Eshop\Application\Model\Basket::class)->setMethods(['getProductsCount'])->getMock();
+        $basket->expects($this->any())->method('getProductsCount')->willReturn(true);
+        Registry::getSession()->setBasket($basket);
+        $mockBuilder = $this->getMockBuilder(Registry::class);
+        $mockBuilder->setMethods(['redirect']);
+        $utils = $mockBuilder->getMock();
+        $utils->expects($this->any())->method('redirect')->willReturn('test');
+
+        $oOrderOverview = new OrderController($order, null, $utils, $basket);
+        $result = $oOrderOverview->getHostedPaymentApiResponse();
+        $this->assertNotEmpty($result);
+ 
+    }
     /**
      * Test case for OrderController::isEmbedded()
      */
@@ -142,7 +170,7 @@ class OrderControllerTest extends \Codeception\Test\Unit
     /**
      * Test case to get error message displayed on template file
      */
-    public function testGetErrorMsg()
+    public function testGetValidationMsg()
     {
         $this->oxSession->setVariable('nets_err_msg', 'test');
         $errorMsg = $this->orderObject->getErrorMsg();

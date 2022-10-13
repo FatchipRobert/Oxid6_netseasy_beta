@@ -243,7 +243,7 @@ class PaymentOperations
                                 ->andWhere('product_ref = ?')
                                 ->andWhere('charge_left_qty != ?')
                                 ->setParameter(0, $payment_id)->setParameter(1, $val['chargeId'])->setParameter(2, $ref)->setParameter(3, 0);
-                        $charge_query = $queryBuilder->execute()->fetchAll();
+                        $singlecharge_query = $queryBuilder->execute()->fetchAll();
 
                         if (count($singlecharge_query) > 0) {
                             $charge_left_qty = $singlecharge_query[0]['charge_left_qty'];

@@ -71,8 +71,19 @@ class OrderTest extends \Codeception\Test\Unit
         ]);
         $this->oxSession->setBasket($basket);
         $oNetsBasketItems = $this->getMockBuilder(NetsBasketItems::class)->setMethods(['getItemList', 'getDiscountItem', 'getProductItem'])->getMock();
-        $oNetsBasketItems->expects($this->any())->method('getItemList')->willReturn(1);
-        $oNetsBasketItems->expects($this->any())->method('getDiscountItem')->willReturn(1);
+        $oNetsBasketItems->expects($this->any())->method('getItemList')->willReturn([0=>[
+            'reference' => '1205',
+            'name' => 'ABC',
+            'quantity' => 1,
+            'unit' => 'units',
+            'unitPrice' => 10000,
+            'taxRate' => 2500,
+            'taxAmount' => 250,
+            'grossTotalAmount' => 12500,
+            'netTotalAmount' => 10000,
+            'oxbprice' => 10000
+        ]]);
+        $oNetsBasketItems->expects($this->any())->method('getDiscountItem')->willReturn([]);
         $oNetsBasketItems->expects($this->any())->method('getProductItem')->willReturn([
             'reference' => '1205',
             'name' => 'ABC',
@@ -102,7 +113,7 @@ class OrderTest extends \Codeception\Test\Unit
     /**
      * Test case to log Order ID
      */
-    public function testLogCatchErrors()
+    public function testLogCatch()
     {
         $e = new \Exception();
         $result = $this->orderObject->logCatchErrors($e);
