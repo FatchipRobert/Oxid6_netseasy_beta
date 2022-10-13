@@ -18,7 +18,7 @@
 		[{ $smarty.block.parent }]
 
 		<link rel="stylesheet" href="[{$oViewConf->getModuleUrl('esnetseasy', 'out/admin/src/css/order.css')}]" type="text/css"/>
-		<script src="http://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+		<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 		<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
 
 		<div class="nets-container">
@@ -57,7 +57,7 @@
 								<div class="qty-box charge">
 									<div class="quantity">
 										<input type="hidden" class="quant" value="[{ $listitem.quantity }]"/>
-										<input type="hidden" class="reference" value="[{ $listitem.reference }]"/>
+										<input type="hidden" class="reference" value="[{ $listitem.reference|replace:' ':'_' }]"/>
 										<input type="hidden" class="price" value="[{ $listitem.price }]"/>
 										<input type="hidden" class="currency" value="[{ $edit->oxorder__oxcurrency->value }]"/>
 										<input type="button" value="-" class="minus"/>
@@ -77,7 +77,7 @@
 							<td class="listing">[{ $listitem.reference }]</td> 
 							<td class="listing">[{ $listitem.name }]</td>
 							<td class="listing right pr">
-								<span id="price_[{ $listitem.reference }]" class="priceblk">
+								<span id="price_[{ $listitem.reference|replace:' ':'_' }]" class="priceblk">
 									[{ $listitem.price }] [{ $edit->oxorder__oxcurrency->value }]
 								</span>
 							</td>
@@ -91,7 +91,7 @@
 									<input type="hidden" name="reference" value="[{ $listitem.reference }]"/> 
 									<button 
 									  type="submit" 
-									  id="item_[{ $listitem.reference }]" 
+									  id="item_[{ $listitem.reference|replace:' ':'_' }]" 
 									  class="nets-btn capture" 
 									  name="charge" value="[{ $listitem.quantity }]"
 									/>
@@ -110,7 +110,7 @@
 								<div class="qty-box refund">
 									<div class="quantity">
 										<input type="hidden" class="quant" value="[{ $prodval.quantity }]"/>
-										<input type="hidden" class="reference" value="[{ $key }]"/>
+										<input type="hidden" class="reference" value="[{ $key|replace:' ':'_' }]"/>
 										<input type="hidden" class="price" value="[{ $prodval.price }]"/>
 										<input type="hidden" class="currency" value="[{ $edit->oxorder__oxcurrency->value }]"/>
 										<input type="button" value="-" class="minus"/>
@@ -130,7 +130,7 @@
 							<td class="listing"> [{ $key }]</td>
 							<td class="listing"> [{ $prodval.name }]</td>
 							<td class="listing right pr">
-								<span id="price_[{$key}]" class="priceblk">
+								<span id="price_[{ $key|replace:' ':'_' }]" class="priceblk">
 									[{ $prodval.price }] [{ $edit->oxorder__oxcurrency->value }]
 								</span>
 							</td>
@@ -144,7 +144,7 @@
 									<input type="hidden" name="reference" value="[{$key}]"/> 
 									<button 
 									  type="submit" 
-									  id="item_[{$key}]" 
+									  id="item_[{ $key|replace:' ':'_'}]" 
 									  class="nets-btn refund" 
 									  name="refund" 
 									  value="[{$prodval.quantity}]"

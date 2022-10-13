@@ -85,7 +85,7 @@ $(".quantity").on('click', '.plus, .minus', function () {
 			$qty.val(max);
 			$('#item_'+ref).val(max);
 			$('#price_'+ref).text(parseFloat(max*price).toFixed(2) + ' ' + currency);
-			plus.addClass('is-disabled');
+			plus.addClass('is-disabled'); 
 		} else {
 			currentInput++;
 			$qty.val(currentInput);
