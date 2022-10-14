@@ -1,7 +1,7 @@
 $(function() {
 	if($('#dibs-complete-checkout').length !== 0) {
 
-		$('.alert.alert-info').after('<div class="row"><div class="col-md-6 ttmain"></div><div class="col-md-6"><div class="row"><div class="col-md-12 sstop"></div><div class="col-md-12 ssbtm"></div></div></div><div class="col-md-12 bbot"></div></div>');
+		$('.alert.alert-info:first').after('<div class="row"><div class="col-md-6 ttmain"></div><div class="col-md-6"><div class="row"><div class="col-md-12 sstop"></div><div class="col-md-12 ssbtm"></div></div></div><div class="col-md-12 bbot"></div></div>');
 				
 		$('#dibs-block').appendTo('.ttmain');
 		$('#dibs-block').css({ 'height' : 'calc(100% - 30px)' });
