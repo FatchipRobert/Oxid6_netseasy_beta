@@ -1,0 +1,5 @@
+[{assign var="errorMsg" value=$oView->netsGetErrorMsg()}]
+[{ if $errorMsg }]
+	[{include file="message/error.tpl" statusMessage=$errorMsg}]
+[{ /if }]
+[{$smarty.block.parent}]
