@@ -12,7 +12,7 @@
 	
 	<div id="dibs-block" class="agb card">
 		<div class="card-header">
-			<h3 class="card-title">Nets Easy</h3>
+			<h3 class="card-title">[{$payment->oxpayments__oxdesc->value}]</h3>
 		</div>
 		<div class="card-body">
 			<div id="dibs-complete-checkout"></div>
